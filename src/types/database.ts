@@ -26,30 +26,42 @@ export interface Experience {
   description: string | null
 }
 
-export type ApplicationStatus = 'saved' | 'applied' | 'interview' | 'offer' | 'rejected'
+// Match Flutter schema exactly
+export type ApplicationStatus = 'Saved' | 'Applied' | 'Interview' | 'Offer' | 'Rejected'
+
+export const APPLICATION_STATUSES: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
 
 export interface Application {
-  id: string
+  id?: string
   user_id: string
   company: string
-  role: string
+  position: string  // Flutter uses 'position', not 'role'
   status: ApplicationStatus
-  date_applied: string | null
-  job_link: string | null
+  applied_date: string | null  // Flutter uses 'applied_date'
   notes: string | null
-  created_at: string
-  updated_at: string
+  url: string | null  // Flutter uses 'url', not 'job_link'
+  created_at?: string
+  updated_at?: string
 }
 
-export interface PracticeSession {
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  timestamp: Date
+}
+
+export type InterviewType = 'behavioral' | 'technical' | 'companySpecific'
+
+export interface InterviewSession {
   id: string
   user_id: string
   application_id: string | null
-  questions: PracticeQuestion[]
+  type: InterviewType
+  questions: InterviewQuestion[]
   created_at: string
 }
 
-export interface PracticeQuestion {
+export interface InterviewQuestion {
   question: string
   answer: string | null
   feedback: string | null

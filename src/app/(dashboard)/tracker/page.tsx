@@ -12,19 +12,11 @@ import { createClient } from '@/lib/supabase/client'
 import type { Application, ApplicationStatus } from '@/types/database'
 
 const statusColors: Record<ApplicationStatus, string> = {
-  saved: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-  applied: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
-  interview: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
-  offer: 'bg-green-100 text-green-700 hover:bg-green-200',
-  rejected: 'bg-red-100 text-red-700 hover:bg-red-200',
-}
-
-const statusLabels: Record<ApplicationStatus, string> = {
-  saved: 'Saved',
-  applied: 'Applied',
-  interview: 'Interview',
-  offer: 'Offer',
-  rejected: 'Rejected',
+  Saved: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+  Applied: 'bg-blue-100 text-blue-700 hover:bg-blue-200',
+  Interview: 'bg-amber-100 text-amber-700 hover:bg-amber-200',
+  Offer: 'bg-green-100 text-green-700 hover:bg-green-200',
+  Rejected: 'bg-red-100 text-red-700 hover:bg-red-200',
 }
 
 type FilterStatus = ApplicationStatus | 'all'
@@ -52,6 +44,7 @@ export default function TrackerPage() {
       .from('applications')
       .select('*')
       .eq('user_id', user.id)
+      .order('applied_date', { ascending: false })
       .order('created_at', { ascending: false })
 
     if (data) {
@@ -69,6 +62,8 @@ export default function TrackerPage() {
     if (status === 'all') return applications.length
     return applications.filter((app) => app.status === status).length
   }
+
+  const allStatuses: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
 
   if (isLoading) {
     return (
@@ -137,7 +132,7 @@ export default function TrackerPage() {
           >
             All ({getStatusCount('all')})
           </button>
-          {(Object.keys(statusLabels) as ApplicationStatus[]).map((status) => (
+          {allStatuses.map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -147,7 +142,7 @@ export default function TrackerPage() {
                   : 'bg-card text-content-secondary border border-border hover:bg-muted'
               }`}
             >
-              {statusLabels[status]} ({getStatusCount(status)})
+              {status} ({getStatusCount(status)})
             </button>
           ))}
         </div>
@@ -157,7 +152,7 @@ export default function TrackerPage() {
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Briefcase className="w-12 h-12 text-content-tertiary mb-3" />
             <p className="text-content-secondary">
-              No {filter !== 'all' && statusLabels[filter]} applications
+              No {filter !== 'all' && filter} applications
             </p>
           </div>
         ) : (
@@ -169,19 +164,19 @@ export default function TrackerPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-content-primary truncate">
-                          {app.role}
+                          {app.position}
                         </p>
                         <p className="text-sm text-content-secondary truncate">
                           {app.company}
                         </p>
-                        {app.date_applied && (
+                        {app.applied_date && (
                           <p className="text-xs text-content-tertiary mt-1">
-                            Applied {new Date(app.date_applied).toLocaleDateString()}
+                            Applied {new Date(app.applied_date).toLocaleDateString()}
                           </p>
                         )}
                       </div>
                       <Badge className={statusColors[app.status]}>
-                        {statusLabels[app.status]}
+                        {app.status}
                       </Badge>
                     </div>
                   </CardContent>

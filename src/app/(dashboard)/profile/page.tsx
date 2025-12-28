@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   Upload,
   Mail,
@@ -17,6 +18,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ResumeUpload } from '@/components/resume-upload'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile } from '@/types/database'
 
@@ -75,10 +77,7 @@ export default function ProfilePage() {
           <p className="text-content-secondary mb-6 max-w-sm">
             Upload your resume to automatically create your profile with AI
           </p>
-          <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Resume
-          </Button>
+          <ResumeUpload onSuccess={loadProfile} />
         </div>
       </AppShell>
     )
@@ -88,14 +87,16 @@ export default function ProfilePage() {
     <AppShell
       title="My Profile"
       actions={
-        <Button
-          variant="outline"
-          size="sm"
-          className="border-forest-green text-forest-green hover:bg-[rgba(22,51,0,0.08)]"
-        >
-          <Edit className="w-4 h-4 mr-2" />
-          Edit
-        </Button>
+        <Link href="/profile/edit">
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-forest-green text-forest-green hover:bg-[rgba(22,51,0,0.08)]"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+        </Link>
       }
     >
       <div className="p-4 lg:p-6 pb-24 lg:pb-6">
@@ -118,22 +119,20 @@ export default function ProfilePage() {
                   </p>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-content-secondary"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Update Resume
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-forest-green text-forest-green"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
+                  <ResumeUpload
+                    onSuccess={loadProfile}
+                    className="text-content-secondary hover:text-content-primary"
+                  />
+                  <Link href="/profile/edit">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-forest-green text-forest-green"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </CardContent>

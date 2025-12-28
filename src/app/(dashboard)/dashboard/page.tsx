@@ -19,6 +19,7 @@ import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ResumeUpload } from '@/components/resume-upload'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile, Application, ApplicationStatus } from '@/types/database'
 
@@ -74,11 +75,11 @@ function QuickAction({ icon, label, href, onClick, isLoading }: QuickActionProps
 }
 
 const statusColors: Record<ApplicationStatus, string> = {
-  saved: 'bg-gray-100 text-gray-700',
-  applied: 'bg-blue-100 text-blue-700',
-  interview: 'bg-amber-100 text-amber-700',
-  offer: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-700',
+  Saved: 'bg-gray-100 text-gray-700',
+  Applied: 'bg-blue-100 text-blue-700',
+  Interview: 'bg-amber-100 text-amber-700',
+  Offer: 'bg-green-100 text-green-700',
+  Rejected: 'bg-red-100 text-red-700',
 }
 
 export default function DashboardPage() {
@@ -86,11 +87,11 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [applications, setApplications] = useState<Application[]>([])
   const [statusCounts, setStatusCounts] = useState<Record<ApplicationStatus, number>>({
-    saved: 0,
-    applied: 0,
-    interview: 0,
-    offer: 0,
-    rejected: 0,
+    Saved: 0,
+    Applied: 0,
+    Interview: 0,
+    Offer: 0,
+    Rejected: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
 
@@ -131,11 +132,11 @@ export default function DashboardPage() {
 
       // Calculate status counts
       const counts: Record<ApplicationStatus, number> = {
-        saved: 0,
-        applied: 0,
-        interview: 0,
-        offer: 0,
-        rejected: 0,
+        Saved: 0,
+        Applied: 0,
+        Interview: 0,
+        Offer: 0,
+        Rejected: 0,
       }
 
       appsData.forEach((app) => {
@@ -177,22 +178,22 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<FileText className="w-5 h-5 text-forest-green" />}
-            value={String(statusCounts.applied)}
+            value={String(statusCounts.Applied)}
             label="Total Applied"
           />
           <StatCard
             icon={<Calendar className="w-5 h-5 text-forest-green" />}
-            value={String(statusCounts.interview)}
+            value={String(statusCounts.Interview)}
             label="Interviews"
           />
           <StatCard
             icon={<Gift className="w-5 h-5 text-forest-green" />}
-            value={String(statusCounts.offer)}
+            value={String(statusCounts.Offer)}
             label="Offers"
           />
           <StatCard
             icon={<Bookmark className="w-5 h-5 text-forest-green" />}
-            value={String(statusCounts.saved)}
+            value={String(statusCounts.Saved)}
             label="Saved"
           />
         </div>
@@ -212,10 +213,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-content-secondary mb-4">
                   Upload your resume to create your profile automatically with AI
                 </p>
-                <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Resume
-                </Button>
+                <ResumeUpload onSuccess={loadData} />
               </CardContent>
             </Card>
           ) : (
@@ -249,10 +247,9 @@ export default function DashboardPage() {
                 label="Add App"
                 href="/tracker/add"
               />
-              <QuickAction
-                icon={<Upload className="w-6 h-6" />}
-                label="Upload"
-                onClick={() => {}}
+              <ResumeUpload
+                onSuccess={loadData}
+                className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-muted transition-colors cursor-pointer min-w-[100px]"
               />
               <QuickAction
                 icon={<MessageSquare className="w-6 h-6" />}
@@ -301,11 +298,11 @@ export default function DashboardPage() {
                       className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-[rgba(22,51,0,0.08)] transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-content-primary">{app.role}</p>
+                        <p className="font-medium text-content-primary">{app.position}</p>
                         <p className="text-sm text-content-secondary">{app.company}</p>
                       </div>
                       <Badge className={statusColors[app.status]}>
-                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                        {app.status}
                       </Badge>
                     </Link>
                   ))}
@@ -352,11 +349,11 @@ export default function DashboardPage() {
                         className="flex items-center justify-between p-3 rounded-lg bg-muted hover:bg-[rgba(22,51,0,0.08)] transition-colors"
                       >
                         <div>
-                          <p className="font-medium text-content-primary">{app.role}</p>
+                          <p className="font-medium text-content-primary">{app.position}</p>
                           <p className="text-sm text-content-secondary">{app.company}</p>
                         </div>
                         <Badge className={statusColors[app.status]}>
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                          {app.status}
                         </Badge>
                       </Link>
                     ))}
@@ -381,10 +378,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-content-secondary mb-4">
                     Upload your resume to create your profile automatically with AI
                   </p>
-                  <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Resume
-                  </Button>
+                  <ResumeUpload onSuccess={loadData} />
                 </CardContent>
               </Card>
             ) : (
@@ -419,12 +413,10 @@ export default function DashboardPage() {
                     Add Application
                   </span>
                 </Link>
-                <button className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full">
-                  <Upload className="w-5 h-5 text-forest-green" />
-                  <span className="text-sm font-medium text-content-primary">
-                    Upload Resume
-                  </span>
-                </button>
+                <ResumeUpload
+                  onSuccess={loadData}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full justify-start"
+                />
                 <Link
                   href="/assistant"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
