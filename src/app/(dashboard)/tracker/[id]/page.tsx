@@ -144,7 +144,7 @@ export default function EditApplicationPage() {
     return (
       <AppShell title="Edit Application">
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </AppShell>
     )

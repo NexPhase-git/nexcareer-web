@@ -18,13 +18,48 @@ import {
   Bell,
   X,
   Plus,
+  Sun,
+  Moon,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { Application, ApplicationStatus } from '@/types/database'
+
+// Theme Toggle Component
+function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+        <div className="w-5 h-5" />
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className="w-10 h-10 rounded-lg flex items-center justify-center hover:bg-muted transition-colors"
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {theme === 'dark' ? (
+        <Sun className="w-5 h-5 text-content-secondary" />
+      ) : (
+        <Moon className="w-5 h-5 text-content-secondary" />
+      )}
+    </button>
+  )
+}
 
 // Quick actions for search
 const quickActions = [
@@ -168,8 +203,8 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
         {/* Logo */}
         <div className="p-4">
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-            <div className="w-10 h-10 rounded-lg bg-bright-green flex items-center justify-center flex-shrink-0">
-              <span className="text-lg font-bold text-forest-green">N</span>
+            <div className="w-10 h-10 rounded-lg bg-[#9FE870] flex items-center justify-center flex-shrink-0">
+              <span className="text-lg font-bold text-[#163300]">N</span>
             </div>
             {!sidebarCollapsed && (
               <span className="text-xl font-bold text-content-primary">NexCareer</span>
@@ -189,14 +224,14 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
                   sidebarCollapsed ? 'justify-center' : ''
                 } ${
                   isActive
-                    ? 'bg-[rgba(22,51,0,0.08)] text-forest-green'
+                    ? 'bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] text-accent-green'
                     : 'text-content-secondary hover:bg-muted hover:text-content-primary'
                 }`}
                 title={sidebarCollapsed ? item.label : undefined}
               >
                 {/* Active indicator */}
                 {isActive && (
-                  <div className="absolute left-0 top-2.5 bottom-2.5 w-[3px] bg-forest-green rounded-full" />
+                  <div className="absolute left-0 top-2.5 bottom-2.5 w-[3px] bg-accent-green rounded-full" />
                 )}
                 {isActive ? (item.activeIcon || item.icon) : item.icon}
                 {!sidebarCollapsed && item.label}
@@ -237,7 +272,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
               sidebarCollapsed ? 'justify-center' : ''
             } ${
               pathname === '/settings'
-                ? 'bg-[rgba(22,51,0,0.08)] text-forest-green'
+                ? 'bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] text-accent-green'
                 : 'text-content-secondary hover:bg-muted hover:text-content-primary'
             }`}
             title={sidebarCollapsed ? 'Settings' : undefined}
@@ -324,7 +359,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
     }
 
     return (
-      <header className="hidden lg:flex items-center justify-between h-16 px-6 bg-card border-b border-border">
+      <header className="hidden lg:flex items-center justify-between h-16 px-6 bg-card border-b border-border sticky top-0 z-40">
         {/* Page Title */}
         <h1 className="text-xl font-bold text-content-primary">{title}</h1>
 
@@ -422,6 +457,9 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
             )}
           </div>
 
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
           {/* Notification Bell */}
           <div ref={notifRef} className="relative">
             <button
@@ -447,9 +485,9 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
           <div ref={userMenuRef} className="relative">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-10 h-10 rounded-full bg-[rgba(22,51,0,0.08)] flex items-center justify-center hover:bg-[rgba(22,51,0,0.12)] transition-colors"
+              className="w-10 h-10 rounded-full avatar-bg flex items-center justify-center hover:opacity-90 transition-opacity"
             >
-              <span className="text-sm font-semibold text-forest-green">{getInitials()}</span>
+              <span className="text-sm font-semibold avatar-text">{getInitials()}</span>
             </button>
 
             {showUserMenu && (
@@ -579,8 +617,8 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
       {/* Logo */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-bright-green flex items-center justify-center">
-            <span className="text-lg font-bold text-forest-green">N</span>
+          <div className="w-10 h-10 rounded-lg bg-[#9FE870] flex items-center justify-center">
+            <span className="text-lg font-bold text-[#163300]">N</span>
           </div>
           <span className="text-xl font-bold text-content-primary">NexCareer</span>
         </div>
@@ -597,7 +635,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-[rgba(22,51,0,0.08)] text-forest-green'
+                  ? 'bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] text-accent-green'
                   : 'text-content-secondary hover:bg-muted hover:text-content-primary'
               }`}
             >
@@ -652,9 +690,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
           >
             <Search className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-content-secondary">
-            <Bell className="w-5 h-5" />
-          </Button>
+          <ThemeToggle />
         </div>
       </header>
 
@@ -682,7 +718,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
                 key={item.href}
                 href={item.href}
                 className={`flex flex-col items-center gap-1 px-3 py-2 ${
-                  isActive ? 'text-forest-green' : 'text-content-secondary'
+                  isActive ? 'text-accent-green' : 'text-content-secondary'
                 }`}
               >
                 {isActive ? (item.activeIcon || item.icon) : item.icon}

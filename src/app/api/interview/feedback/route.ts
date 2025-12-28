@@ -1,14 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { isRateLimited, getClientIP, sanitizeString } from '@/lib/security'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
 
 export async function POST(request: NextRequest) {
   try {
-    const { question, answer } = await request.json()
+    // Auth check
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    if (isRateLimited(`feedback:${clientIP}`, { maxRequests: 20, windowMs: 60000 })) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment.' },
+        { status: 429 }
+      )
+    }
+
+    const body = await request.json()
+    const question = sanitizeString(body.question)
+    const answer = sanitizeString(body.answer)
 
     if (!question || !answer) {
       return NextResponse.json({ error: 'Question and answer are required' }, { status: 400 })
+    }
+
+    // Limit input length
+    if (question.length > 1000 || answer.length > 5000) {
+      return NextResponse.json({ error: 'Input too long' }, { status: 400 })
     }
 
     const systemPrompt = `You are an interview coach providing feedback on interview answers. Analyze the answer and provide:

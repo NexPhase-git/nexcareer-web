@@ -223,9 +223,9 @@ export default function CoachPage() {
             {/* Feedback */}
             {feedback && (
               <div className="space-y-4">
-                <Card className="border-forest-green bg-[rgba(22,51,0,0.04)]">
+                <Card className="border-accent-green bg-[rgba(22,51,0,0.04)] dark:bg-[rgba(159,232,112,0.08)]">
                   <CardContent className="p-6">
-                    <h3 className="font-semibold text-forest-green mb-3">AI Feedback</h3>
+                    <h3 className="font-semibold text-accent-green mb-3">AI Feedback</h3>
                     <p className="text-sm text-content-primary whitespace-pre-wrap">
                       {feedback}
                     </p>
@@ -244,7 +244,7 @@ export default function CoachPage() {
                   <Button
                     onClick={resetPractice}
                     variant="outline"
-                    className={`${isLastQuestion ? 'flex-1' : ''} h-12 border-forest-green text-forest-green`}
+                    className={`${isLastQuestion ? 'flex-1' : ''} h-12 border-accent-green text-accent-green`}
                   >
                     {isLastQuestion ? 'Finish Practice' : 'End Session'}
                   </Button>
@@ -264,8 +264,8 @@ export default function CoachPage() {
         <div className="max-w-xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <div className="inline-flex p-6 rounded-full bg-[rgba(22,51,0,0.08)] mb-4">
-              <GraduationCap className="w-12 h-12 text-forest-green" />
+            <div className="inline-flex p-6 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-4">
+              <GraduationCap className="w-12 h-12 text-accent-green" />
             </div>
             <h1 className="text-2xl font-bold text-content-primary mb-2">
               Practice Makes Perfect
@@ -298,8 +298,8 @@ export default function CoachPage() {
                     isDisabled
                       ? 'opacity-50 cursor-not-allowed border-border bg-muted'
                       : isSelected
-                      ? 'border-forest-green bg-[rgba(22,51,0,0.08)]'
-                      : 'border-border hover:border-forest-green hover:bg-muted'
+                      ? 'border-accent-green bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)]'
+                      : 'border-border hover:border-accent-green hover:bg-muted'
                   }`}
                 >
                   <div className="flex items-center gap-4">
@@ -308,12 +308,12 @@ export default function CoachPage() {
                         isSelected ? 'bg-[rgba(22,51,0,0.12)]' : 'bg-muted'
                       }`}
                     >
-                      <span className={isSelected ? 'text-forest-green' : 'text-content-secondary'}>
+                      <span className={isSelected ? 'text-accent-green' : 'text-content-secondary'}>
                         {option.icon}
                       </span>
                     </div>
                     <div className="flex-1">
-                      <p className={`font-semibold ${isSelected ? 'text-forest-green' : 'text-content-primary'}`}>
+                      <p className={`font-semibold ${isSelected ? 'text-accent-green' : 'text-content-primary'}`}>
                         {option.label}
                       </p>
                       <p className="text-sm text-content-secondary">
@@ -321,7 +321,7 @@ export default function CoachPage() {
                       </p>
                     </div>
                     {isSelected && (
-                      <Check className="w-5 h-5 text-forest-green" />
+                      <Check className="w-5 h-5 text-accent-green" />
                     )}
                   </div>
                 </button>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { isRateLimited, getClientIP, sanitizeString } from '@/lib/security'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
@@ -11,10 +12,26 @@ interface Message {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history } = await request.json()
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    if (isRateLimited(`chat:${clientIP}`, { maxRequests: 20, windowMs: 60000 })) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment.' },
+        { status: 429 }
+      )
+    }
 
-    if (!message) {
+    const body = await request.json()
+    const message = sanitizeString(body.message)
+    const history = body.history
+
+    if (!message || message.length < 1) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+    }
+
+    // Limit message length
+    if (message.length > 2000) {
+      return NextResponse.json({ error: 'Message too long' }, { status: 400 })
     }
 
     // Get user context

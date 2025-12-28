@@ -57,7 +57,7 @@ export default function ProfilePage() {
     return (
       <AppShell title="Profile">
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </AppShell>
     )
@@ -68,8 +68,8 @@ export default function ProfilePage() {
     return (
       <AppShell title="Profile">
         <div className="flex flex-col items-center justify-center h-[60vh] px-6 text-center">
-          <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] mb-6">
-            <Upload className="w-16 h-16 text-forest-green" />
+          <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-6">
+            <Upload className="w-16 h-16 text-accent-green" />
           </div>
           <h2 className="text-xl font-bold text-content-primary mb-2">
             No Profile Yet
@@ -91,7 +91,7 @@ export default function ProfilePage() {
           <Button
             variant="outline"
             size="sm"
-            className="border-forest-green text-forest-green hover:bg-[rgba(22,51,0,0.08)]"
+            className="border-accent-green text-accent-green hover:bg-[rgba(22,51,0,0.08)] dark:hover:bg-[rgba(159,232,112,0.08)]"
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit
@@ -105,8 +105,8 @@ export default function ProfilePage() {
           <Card className="border-border">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-bright-green flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-forest-green">
+                <div className="w-16 h-16 rounded-full avatar-bg flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl font-bold avatar-text">
                     {profile.name?.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -127,7 +127,7 @@ export default function ProfilePage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="border-forest-green text-forest-green"
+                      className="border-accent-green text-accent-green"
                     >
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
@@ -143,7 +143,7 @@ export default function ProfilePage() {
             <Card className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Mail className="w-5 h-5 text-forest-green" />
+                  <Mail className="w-5 h-5 text-accent-green" />
                   <h3 className="text-base font-semibold text-content-primary">
                     Contact Information
                   </h3>
@@ -173,7 +173,7 @@ export default function ProfilePage() {
             <Card className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <FileText className="w-5 h-5 text-forest-green" />
+                  <FileText className="w-5 h-5 text-accent-green" />
                   <h3 className="text-base font-semibold text-content-primary">
                     Professional Summary
                   </h3>
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             <Card className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Lightbulb className="w-5 h-5 text-forest-green" />
+                  <Lightbulb className="w-5 h-5 text-accent-green" />
                   <h3 className="text-base font-semibold text-content-primary">
                     Skills
                   </h3>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                   {profile.skills.map((skill, index) => (
                     <Badge
                       key={index}
-                      className="bg-[rgba(22,51,0,0.08)] text-forest-green hover:bg-[rgba(22,51,0,0.12)]"
+                      className="bg-[rgba(22,51,0,0.08)] text-accent-green hover:bg-[rgba(22,51,0,0.12)] dark:bg-[rgba(159,232,112,0.12)] dark:hover:bg-[rgba(159,232,112,0.18)]"
                     >
                       {skill}
                     </Badge>
@@ -214,7 +214,7 @@ export default function ProfilePage() {
             <Card className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Briefcase className="w-5 h-5 text-forest-green" />
+                  <Briefcase className="w-5 h-5 text-accent-green" />
                   <h3 className="text-base font-semibold text-content-primary">
                     Work Experience
                   </h3>
@@ -229,8 +229,8 @@ export default function ProfilePage() {
                         {exp.role}
                       </h4>
                       <div className="flex items-center gap-1 mt-1">
-                        <Briefcase className="w-3.5 h-3.5 text-forest-green" />
-                        <span className="text-sm text-forest-green">
+                        <Briefcase className="w-3.5 h-3.5 text-accent-green" />
+                        <span className="text-sm text-accent-green">
                           {exp.company}
                         </span>
                       </div>
@@ -256,7 +256,7 @@ export default function ProfilePage() {
             <Card className="border-border">
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <GraduationCap className="w-5 h-5 text-forest-green" />
+                  <GraduationCap className="w-5 h-5 text-accent-green" />
                   <h3 className="text-base font-semibold text-content-primary">
                     Education
                   </h3>
@@ -271,8 +271,8 @@ export default function ProfilePage() {
                         {edu.degree}
                       </h4>
                       <div className="flex items-center gap-1 mt-1">
-                        <GraduationCap className="w-3.5 h-3.5 text-forest-green" />
-                        <span className="text-sm text-forest-green">
+                        <GraduationCap className="w-3.5 h-3.5 text-accent-green" />
+                        <span className="text-sm text-accent-green">
                           {edu.school}
                         </span>
                       </div>

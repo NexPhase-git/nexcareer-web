@@ -59,9 +59,9 @@ function QuickAction({ icon, label, href, onClick, isLoading }: QuickActionProps
   const content = (
     <div className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-muted transition-colors cursor-pointer min-w-[100px]">
       {isLoading ? (
-        <Loader2 className="w-6 h-6 text-forest-green animate-spin" />
+        <Loader2 className="w-6 h-6 text-accent-green animate-spin" />
       ) : (
-        <div className="text-forest-green">{icon}</div>
+        <div className="text-accent-green">{icon}</div>
       )}
       <span className="text-sm font-medium text-content-primary">{label}</span>
     </div>
@@ -75,11 +75,11 @@ function QuickAction({ icon, label, href, onClick, isLoading }: QuickActionProps
 }
 
 const statusColors: Record<ApplicationStatus, string> = {
-  Saved: 'bg-gray-100 text-gray-700',
-  Applied: 'bg-[rgba(22,51,0,0.08)] text-forest-green border border-forest-green',
-  Interview: 'bg-amber-100 text-amber-700',
-  Offer: 'bg-green-100 text-green-700',
-  Rejected: 'bg-red-100 text-red-700',
+  Saved: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  Applied: 'bg-[rgba(22,51,0,0.08)] text-accent-green border border-current dark:bg-[rgba(159,232,112,0.15)]',
+  Interview: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Offer: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  Rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 export default function DashboardPage() {
@@ -160,7 +160,7 @@ export default function DashboardPage() {
     return (
       <AppShell title="Dashboard">
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </AppShell>
     )
@@ -177,22 +177,22 @@ export default function DashboardPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            icon={<FileText className="w-5 h-5 text-forest-green" />}
+            icon={<FileText className="w-5 h-5 text-accent-green" />}
             value={String(statusCounts.Applied)}
             label="Total Applied"
           />
           <StatCard
-            icon={<Calendar className="w-5 h-5 text-forest-green" />}
+            icon={<Calendar className="w-5 h-5 text-accent-green" />}
             value={String(statusCounts.Interview)}
             label="Interviews"
           />
           <StatCard
-            icon={<Gift className="w-5 h-5 text-forest-green" />}
+            icon={<Gift className="w-5 h-5 text-accent-green" />}
             value={String(statusCounts.Offer)}
             label="Offers"
           />
           <StatCard
-            icon={<Bookmark className="w-5 h-5 text-forest-green" />}
+            icon={<Bookmark className="w-5 h-5 text-accent-green" />}
             value={String(statusCounts.Saved)}
             label="Saved"
           />
@@ -204,8 +204,8 @@ export default function DashboardPage() {
           {!profile?.name ? (
             <Card className="border-border">
               <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="p-4 rounded-full bg-[rgba(22,51,0,0.08)] mb-4">
-                  <Upload className="w-10 h-10 text-forest-green" />
+                <div className="p-4 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-4">
+                  <Upload className="w-10 h-10 text-accent-green" />
                 </div>
                 <h3 className="text-lg font-semibold text-content-primary mb-2">
                   Get Started
@@ -220,8 +220,8 @@ export default function DashboardPage() {
             <Card className="border-border">
               <CardContent className="p-4">
                 <Link href="/profile" className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-bright-green flex items-center justify-center">
-                    <span className="text-lg font-bold text-forest-green">
+                  <div className="w-12 h-12 rounded-full avatar-bg flex items-center justify-center">
+                    <span className="text-lg font-bold avatar-text">
                       {profile.name?.charAt(0).toUpperCase()}
                     </span>
                   </div>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                   Recent Applications
                 </h3>
                 <Link href="/tracker">
-                  <Button variant="ghost" size="sm" className="text-forest-green">
+                  <Button variant="ghost" size="sm" className="text-accent-green">
                     View All
                   </Button>
                 </Link>
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                     Recent Applications
                   </h3>
                   <Link href="/tracker">
-                    <Button variant="ghost" size="sm" className="text-forest-green">
+                    <Button variant="ghost" size="sm" className="text-accent-green">
                       View All
                     </Button>
                   </Link>
@@ -369,8 +369,8 @@ export default function DashboardPage() {
             {!profile?.name ? (
               <Card className="border-border">
                 <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="p-4 rounded-full bg-[rgba(22,51,0,0.08)] mb-4">
-                    <Upload className="w-10 h-10 text-forest-green" />
+                  <div className="p-4 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-4">
+                    <Upload className="w-10 h-10 text-accent-green" />
                   </div>
                   <h3 className="text-lg font-semibold text-content-primary mb-2">
                     Get Started
@@ -385,8 +385,8 @@ export default function DashboardPage() {
               <Card className="border-border">
                 <CardContent className="p-4">
                   <Link href="/profile" className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-bright-green flex items-center justify-center">
-                      <span className="text-xl font-bold text-forest-green">
+                    <div className="w-14 h-14 rounded-full avatar-bg flex items-center justify-center">
+                      <span className="text-xl font-bold avatar-text">
                         {profile.name?.charAt(0).toUpperCase()}
                       </span>
                     </div>

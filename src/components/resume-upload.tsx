@@ -132,12 +132,12 @@ export function ResumeUpload({ onSuccess, className, variant = 'button' }: Resum
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="w-full p-8 border-2 border-dashed border-border rounded-lg hover:border-forest-green hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full p-8 border-2 border-dashed border-border rounded-lg hover:border-accent-green hover:bg-muted transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div className="flex flex-col items-center gap-4">
             {isUploading ? (
               <>
-                <Loader2 className="w-12 h-12 text-forest-green animate-spin" />
+                <Loader2 className="w-12 h-12 text-accent-green animate-spin" />
                 <div className="text-center">
                   <p className="font-medium text-content-primary">Uploading...</p>
                   <p className="text-sm text-content-secondary">
@@ -147,7 +147,7 @@ export function ResumeUpload({ onSuccess, className, variant = 'button' }: Resum
               </>
             ) : selectedFile ? (
               <>
-                <FileText className="w-12 h-12 text-forest-green" />
+                <FileText className="w-12 h-12 text-accent-green" />
                 <div className="text-center">
                   <p className="font-medium text-content-primary">{selectedFile.name}</p>
                   <p className="text-sm text-content-secondary">
@@ -169,7 +169,7 @@ export function ResumeUpload({ onSuccess, className, variant = 'button' }: Resum
               </>
             ) : (
               <>
-                <Upload className="w-12 h-12 text-forest-green" />
+                <Upload className="w-12 h-12 text-accent-green" />
                 <div className="text-center">
                   <p className="font-medium text-content-primary">
                     Drop your resume here or click to browse

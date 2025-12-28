@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { extractText } from 'unpdf'
+import { isRateLimited, getClientIP, sanitizeFilename } from '@/lib/security'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
 
+// Allowed MIME types for resume upload
+const ALLOWED_MIME_TYPES = ['application/pdf']
+// Max file size: 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024
+
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting (stricter for file uploads)
+    const clientIP = getClientIP(request)
+    if (isRateLimited(`resume:${clientIP}`, { maxRequests: 5, windowMs: 60000 })) {
+      return NextResponse.json(
+        { error: 'Too many uploads. Please wait a moment.' },
+        { status: 429 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -14,14 +29,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Validate file type
-    if (file.type !== 'application/pdf') {
+    // Validate file type (check both MIME type and extension)
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 })
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file extension
+    const fileExtension = file.name.split('.').pop()?.toLowerCase()
+    if (fileExtension !== 'pdf') {
+      return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 })
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: 'File size must be less than 5MB' }, { status: 400 })
+    }
+
+    // Validate file size is not 0
+    if (file.size === 0) {
+      return NextResponse.json({ error: 'File is empty' }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -31,8 +57,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Upload file to Supabase Storage
-    const fileName = `${user.id}/${Date.now()}_${file.name}`
+    // Sanitize filename and create safe path
+    const safeName = sanitizeFilename(file.name.replace('.pdf', ''))
+    const fileName = `${user.id}/${Date.now()}_${safeName}.pdf`
     const arrayBuffer = await file.arrayBuffer()
     const buffer = new Uint8Array(arrayBuffer)
 

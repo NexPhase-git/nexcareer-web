@@ -156,7 +156,7 @@ export default function LoginPage() {
               </span>
               <Link
                 href="/signup"
-                className="text-sm font-semibold text-forest-green hover:underline"
+                className="text-sm font-semibold text-accent-green hover:underline"
               >
                 Sign Up
               </Link>

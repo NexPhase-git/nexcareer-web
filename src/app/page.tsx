@@ -11,8 +11,8 @@ export default function LandingPage() {
         <div className="flex-1" />
 
         {/* Logo/Icon */}
-        <div className="p-8 rounded-full bg-[rgba(22,51,0,0.1)]">
-          <Rocket className="w-16 h-16 text-forest-green" />
+        <div className="p-8 rounded-full bg-[rgba(22,51,0,0.1)] dark:bg-[rgba(159,232,112,0.12)]">
+          <Rocket className="w-16 h-16 text-accent-green" />
         </div>
 
         <div className="h-8" />
@@ -43,7 +43,7 @@ export default function LandingPage() {
           <Button
             asChild
             variant="outline"
-            className="w-full h-12 text-base font-medium border-forest-green text-forest-green hover:bg-[rgba(22,51,0,0.08)]"
+            className="w-full h-12 text-base font-medium border-accent-green text-accent-green hover:bg-[rgba(22,51,0,0.08)] dark:hover:bg-[rgba(159,232,112,0.08)]"
           >
             <Link href="/login">I already have an account</Link>
           </Button>

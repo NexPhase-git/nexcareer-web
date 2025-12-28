@@ -1,11 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { isRateLimited, getClientIP, sanitizeString } from '@/lib/security'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
 
 export async function POST(request: NextRequest) {
   try {
-    const { type, company, position, skills, questionCount = 5 } = await request.json()
+    // Auth check
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Rate limiting
+    const clientIP = getClientIP(request)
+    if (isRateLimited(`interview:${clientIP}`, { maxRequests: 10, windowMs: 60000 })) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a moment.' },
+        { status: 429 }
+      )
+    }
+
+    const body = await request.json()
+    const type = sanitizeString(body.type)
+    const company = sanitizeString(body.company)
+    const position = sanitizeString(body.position)
+    const skills = Array.isArray(body.skills)
+      ? body.skills.map((s: string) => sanitizeString(s)).filter(Boolean)
+      : []
+    const questionCount = Math.min(Math.max(parseInt(body.questionCount) || 5, 1), 10)
 
     if (!type) {
       return NextResponse.json({ error: 'Interview type is required' }, { status: 400 })
@@ -13,12 +38,17 @@ export async function POST(request: NextRequest) {
 
     let systemPrompt = ''
 
+    const validTypes = ['behavioral', 'technical', 'companySpecific']
+    if (!validTypes.includes(type)) {
+      return NextResponse.json({ error: 'Invalid interview type' }, { status: 400 })
+    }
+
     switch (type) {
       case 'behavioral':
         systemPrompt = `You are an interview coach. Generate ${questionCount} behavioral interview questions using the STAR method format. Focus on common workplace scenarios like teamwork, conflict resolution, leadership, and problem-solving.`
         break
       case 'technical':
-        systemPrompt = `You are a technical interviewer. Generate ${questionCount} technical interview questions${skills?.length ? ` focused on these skills: ${skills.join(', ')}` : ''}. Include a mix of conceptual and problem-solving questions.`
+        systemPrompt = `You are a technical interviewer. Generate ${questionCount} technical interview questions${skills.length > 0 ? ` focused on these skills: ${skills.slice(0, 10).join(', ')}` : ''}. Include a mix of conceptual and problem-solving questions.`
         break
       case 'companySpecific':
         if (!company || !position) {
@@ -26,8 +56,6 @@ export async function POST(request: NextRequest) {
         }
         systemPrompt = `You are an interview coach helping someone prepare for an interview at ${company} for the position of ${position}. Generate ${questionCount} interview questions that are likely to be asked at this company for this role. Include a mix of behavioral and role-specific questions.`
         break
-      default:
-        return NextResponse.json({ error: 'Invalid interview type' }, { status: 400 })
     }
 
     systemPrompt += '\n\nReturn ONLY a JSON array of strings with the questions, no explanation. Example: ["Question 1?", "Question 2?"]'

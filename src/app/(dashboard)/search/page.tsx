@@ -22,11 +22,11 @@ import { createClient } from '@/lib/supabase/client'
 import type { Application, ApplicationStatus } from '@/types/database'
 
 const statusColors: Record<ApplicationStatus, string> = {
-  Saved: 'bg-gray-100 text-gray-700',
-  Applied: 'bg-blue-100 text-blue-700',
-  Interview: 'bg-amber-100 text-amber-700',
-  Offer: 'bg-green-100 text-green-700',
-  Rejected: 'bg-red-100 text-red-700',
+  Saved: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  Applied: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  Interview: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  Offer: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  Rejected: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 }
 
 export default function SearchPage() {
@@ -49,7 +49,7 @@ function SearchLoading() {
         </div>
       </header>
       <div className="flex items-center justify-center h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+        <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
       </div>
     </div>
   )
@@ -151,7 +151,7 @@ function SearchContent() {
           </div>
         </header>
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </div>
     )
@@ -231,8 +231,8 @@ function SearchContent() {
           ) : results.length === 0 ? (
             // No results
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] mb-6">
-                <SearchX className="w-12 h-12 text-forest-green" />
+              <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-6">
+                <SearchX className="w-12 h-12 text-accent-green" />
               </div>
               <h2 className="text-xl font-bold text-content-primary mb-2">No results found</h2>
               <p className="text-content-secondary max-w-sm">
@@ -277,7 +277,7 @@ function SearchTip({ icon, title, example }: { icon: React.ReactNode; title: str
 function ApplicationItem({ application }: { application: Application }) {
   return (
     <Link href={`/tracker/${application.id}`}>
-      <Card className="border-border hover:border-forest-green transition-colors cursor-pointer">
+      <Card className="border-border hover:border-accent-green transition-colors cursor-pointer">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex-1 min-w-0">

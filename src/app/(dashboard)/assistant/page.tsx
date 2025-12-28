@@ -145,8 +145,8 @@ export default function AssistantPage() {
           {messages.length === 0 ? (
             // Empty state
             <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto text-center">
-              <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] mb-6">
-                <Brain className="w-12 h-12 text-forest-green" />
+              <div className="p-6 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] mb-6">
+                <Brain className="w-12 h-12 text-accent-green" />
               </div>
               <h2 className="text-xl font-bold text-content-primary mb-2">
                 How can I help you today?
@@ -156,14 +156,14 @@ export default function AssistantPage() {
               </p>
 
               {isLoadingPrompts ? (
-                <Loader2 className="w-6 h-6 animate-spin text-forest-green" />
+                <Loader2 className="w-6 h-6 animate-spin text-accent-green" />
               ) : (
                 <div className="w-full space-y-2">
                   {suggestedPrompts.map((prompt, index) => (
                     <button
                       key={index}
                       onClick={() => sendMessage(prompt)}
-                      className="w-full p-3 text-left text-sm rounded-lg border border-border hover:border-forest-green hover:bg-muted transition-colors"
+                      className="w-full p-3 text-left text-sm rounded-lg border border-border hover:border-accent-green hover:bg-muted transition-colors"
                     >
                       {prompt}
                     </button>
@@ -182,30 +182,30 @@ export default function AssistantPage() {
                   }`}
                 >
                   {message.role === 'assistant' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[rgba(22,51,0,0.08)] flex items-center justify-center">
-                      <Brain className="w-4 h-4 text-forest-green" />
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] flex items-center justify-center">
+                      <Brain className="w-4 h-4 text-accent-green" />
                     </div>
                   )}
 
                   <div
                     className={`max-w-[75%] p-4 rounded-2xl ${
                       message.role === 'user'
-                        ? 'bg-bright-green text-forest-green rounded-br-sm'
+                        ? 'avatar-bg avatar-text rounded-br-sm'
                         : 'bg-card border border-border rounded-bl-sm'
                     }`}
                   >
                     {message.role === 'user' ? (
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     ) : (
-                      <div className="text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-headings:text-content-primary prose-p:text-content-primary prose-li:text-content-primary prose-strong:text-content-primary prose-code:text-forest-green prose-code:bg-[rgba(22,51,0,0.08)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[rgba(22,51,0,0.08)] prose-pre:text-content-primary">
+                      <div className="text-sm markdown-content">
                         <ReactMarkdown>{message.content}</ReactMarkdown>
                       </div>
                     )}
                   </div>
 
                   {message.role === 'user' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-bright-green flex items-center justify-center">
-                      <User className="w-4 h-4 text-forest-green" />
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full avatar-bg flex items-center justify-center">
+                      <User className="w-4 h-4 avatar-text" />
                     </div>
                   )}
                 </div>
@@ -214,8 +214,8 @@ export default function AssistantPage() {
               {/* Typing indicator */}
               {isLoading && (
                 <div className="flex gap-3 justify-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[rgba(22,51,0,0.08)] flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-forest-green" />
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[rgba(22,51,0,0.08)] dark:bg-[rgba(159,232,112,0.12)] flex items-center justify-center">
+                    <Brain className="w-4 h-4 text-accent-green" />
                   </div>
                   <div className="p-4 rounded-2xl bg-card border border-border rounded-bl-sm">
                     <div className="flex gap-1">
@@ -256,7 +256,7 @@ export default function AssistantPage() {
                 size="icon"
                 className={`h-12 w-12 rounded-full ${
                   canSend && input.trim()
-                    ? 'bg-bright-green hover:bg-[#8AD960] text-forest-green'
+                    ? 'avatar-bg avatar-text hover:opacity-90'
                     : 'bg-muted text-content-secondary'
                 }`}
               >

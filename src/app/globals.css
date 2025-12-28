@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -62,6 +61,8 @@
   --color-card: var(--card);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  --color-bright-green: var(--bright-green);
+  --color-forest-green: var(--forest-green);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -143,31 +144,61 @@
 }
 
 .dark {
-  --background: #0E0F0C;
-  --foreground: #FFFFFF;
-  --card: #1A1B18;
-  --card-foreground: #FFFFFF;
-  --popover: #1A1B18;
-  --popover-foreground: #FFFFFF;
+  /* Background - use dark gray, not pure black (Material Design recommends #121212) */
+  --background: #121212;
+  /* Text - use off-white for better readability, not pure white */
+  --foreground: #E8E8E8;
+
+  /* Cards - slightly elevated (lighter) than background for depth */
+  --card: #1E1E1E;
+  --card-foreground: #E8E8E8;
+
+  /* Popover - same as card */
+  --popover: #1E1E1E;
+  --popover-foreground: #E8E8E8;
+
+  /* Primary - bright green works well on dark */
   --primary: #9FE870;
   --primary-foreground: #163300;
-  --secondary: #163300;
+
+  /* Secondary */
+  --secondary: #2A2A2A;
   --secondary-foreground: #9FE870;
-  --muted: rgba(159, 232, 112, 0.08);
-  --muted-foreground: #9CA3AF;
+
+  /* Muted - subtle background variation */
+  --muted: #252525;
+  --muted-foreground: #A0A0A0;
+
+  /* Accent */
   --accent: #9FE870;
   --accent-foreground: #163300;
-  --destructive: #EF4444;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
+
+  /* Destructive - slightly desaturated red for dark mode */
+  --destructive: #F87171;
+
+  /* Borders - subtle but visible */
+  --border: rgba(255, 255, 255, 0.12);
+  --input: rgba(255, 255, 255, 0.08);
   --ring: #9FE870;
-  --sidebar: #1A1B18;
-  --sidebar-foreground: #FFFFFF;
+
+  /* Content colors for text hierarchy */
+  --content-primary: #E8E8E8;
+  --content-secondary: #A0A0A0;
+  --content-tertiary: #6B6B6B;
+
+  /* Green colors for dark mode */
+  --bright-green: #9FE870;
+  /* Keep forest-green dark for text ON green buttons */
+  --forest-green: #163300;
+
+  /* Sidebar */
+  --sidebar: #1A1A1A;
+  --sidebar-foreground: #E8E8E8;
   --sidebar-primary: #9FE870;
   --sidebar-primary-foreground: #163300;
-  --sidebar-accent: rgba(159, 232, 112, 0.08);
+  --sidebar-accent: rgba(159, 232, 112, 0.12);
   --sidebar-accent-foreground: #9FE870;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #9FE870;
 }
 
@@ -211,4 +242,98 @@
 
 .text-forest-green {
   color: var(--forest-green);
+}
+
+/* Accent green - dark green in light mode, bright green in dark mode */
+.text-accent-green {
+  color: var(--forest-green);
+}
+.dark .text-accent-green {
+  color: var(--bright-green);
+}
+
+.bg-accent-green {
+  background-color: var(--forest-green);
+}
+.dark .bg-accent-green {
+  background-color: var(--bright-green);
+}
+
+.border-accent-green {
+  border-color: var(--forest-green);
+}
+.dark .border-accent-green {
+  border-color: var(--bright-green);
+}
+
+/* Avatar styling - adapts to light/dark mode */
+.avatar-bg {
+  background-color: rgba(22, 51, 0, 0.08);
+}
+:is(.dark *).avatar-bg, .dark .avatar-bg {
+  background-color: #9FE870;
+}
+.avatar-text {
+  color: #163300;
+}
+
+/* Markdown content styling for AI responses */
+.markdown-content {
+  color: var(--content-primary);
+}
+
+.markdown-content p {
+  margin: 0.5rem 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin: 0.25rem 0;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+  color: var(--content-primary);
+}
+
+.markdown-content code {
+  background-color: rgba(22, 51, 0, 0.08);
+  color: var(--forest-green);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.markdown-content pre {
+  background-color: rgba(22, 51, 0, 0.08);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 0.5rem 0;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  color: var(--content-primary);
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+}
+
+.markdown-content blockquote {
+  border-left: 3px solid var(--forest-green);
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+  color: var(--content-secondary);
 }

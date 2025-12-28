@@ -13,7 +13,11 @@ import {
   ExternalLink,
   Loader2,
   AlertTriangle,
+  Sun,
+  Moon,
+  Monitor,
 } from 'lucide-react'
+import { useTheme } from 'next-themes'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +37,8 @@ import type { UserProfile, Application } from '@/types/database'
 
 export default function SettingsPage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [applicationCount, setApplicationCount] = useState(0)
@@ -52,6 +58,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     loadData()
   }, [])
 
@@ -344,7 +351,7 @@ export default function SettingsPage() {
     return (
       <AppShell title="Settings">
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </AppShell>
     )
@@ -398,6 +405,55 @@ export default function SettingsPage() {
                     Change
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Appearance Card */}
+          <Card className="border-border">
+            <CardContent className="p-6">
+              <h3 className="text-sm font-semibold text-content-secondary uppercase tracking-wide mb-4">
+                Appearance
+              </h3>
+              <div className="py-2">
+                <p className="text-sm font-medium text-content-primary mb-3">Theme</p>
+                {mounted && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setTheme('light')}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                        theme === 'light'
+                          ? 'border-accent-green bg-[rgba(22,51,0,0.08)] text-accent-green dark:bg-[rgba(159,232,112,0.08)]'
+                          : 'border-border text-content-secondary hover:border-content-secondary'
+                      }`}
+                    >
+                      <Sun className="w-4 h-4" />
+                      <span className="text-sm font-medium">Light</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('dark')}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                        theme === 'dark'
+                          ? 'border-accent-green bg-[rgba(22,51,0,0.08)] text-accent-green dark:bg-[rgba(159,232,112,0.08)]'
+                          : 'border-border text-content-secondary hover:border-content-secondary'
+                      }`}
+                    >
+                      <Moon className="w-4 h-4" />
+                      <span className="text-sm font-medium">Dark</span>
+                    </button>
+                    <button
+                      onClick={() => setTheme('system')}
+                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border transition-colors ${
+                        theme === 'system'
+                          ? 'border-accent-green bg-[rgba(22,51,0,0.08)] text-accent-green dark:bg-[rgba(159,232,112,0.08)]'
+                          : 'border-border text-content-secondary hover:border-content-secondary'
+                      }`}
+                    >
+                      <Monitor className="w-4 h-4" />
+                      <span className="text-sm font-medium">System</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -479,8 +535,8 @@ export default function SettingsPage() {
                 <div className="py-4 flex items-center justify-between">
                   <p className="text-sm font-medium text-content-primary">Powered by</p>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded bg-bright-green flex items-center justify-center">
-                      <span className="text-xs font-bold text-forest-green">N</span>
+                    <div className="w-6 h-6 rounded bg-[#9FE870] flex items-center justify-center">
+                      <span className="text-xs font-bold text-[#163300]">N</span>
                     </div>
                     <span className="text-sm font-semibold text-content-primary">NexPhase</span>
                   </div>

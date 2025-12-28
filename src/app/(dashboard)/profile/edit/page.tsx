@@ -149,7 +149,7 @@ export default function EditProfilePage() {
     return (
       <AppShell title="Edit Profile">
         <div className="flex items-center justify-center h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-forest-green" />
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
         </div>
       </AppShell>
     )
@@ -237,7 +237,7 @@ export default function EditProfilePage() {
                   {skills.map((skill, index) => (
                     <Badge
                       key={index}
-                      className="bg-[rgba(22,51,0,0.08)] text-forest-green hover:bg-[rgba(22,51,0,0.12)] cursor-pointer"
+                      className="bg-[rgba(22,51,0,0.08)] text-accent-green hover:bg-[rgba(22,51,0,0.12)] dark:bg-[rgba(159,232,112,0.12)] dark:hover:bg-[rgba(159,232,112,0.18)] cursor-pointer"
                       onClick={() => removeSkill(index)}
                     >
                       {skill}
@@ -258,7 +258,7 @@ export default function EditProfilePage() {
                     type="button"
                     onClick={addSkill}
                     variant="outline"
-                    className="border-forest-green text-forest-green"
+                    className="border-accent-green text-accent-green"
                   >
                     Add
                   </Button>
@@ -276,7 +276,7 @@ export default function EditProfilePage() {
                     onClick={addExperience}
                     variant="ghost"
                     size="sm"
-                    className="text-forest-green"
+                    className="text-accent-green"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add
@@ -295,12 +295,12 @@ export default function EditProfilePage() {
                       </button>
                     </div>
                     <Input
-                      value={exp.company}
+                      value={exp.company || ''}
                       onChange={(e) => updateExperience(index, 'company', e.target.value)}
                       placeholder="Company name"
                     />
                     <Input
-                      value={exp.role}
+                      value={exp.role || ''}
                       onChange={(e) => updateExperience(index, 'role', e.target.value)}
                       placeholder="Job title"
                     />
@@ -337,7 +337,7 @@ export default function EditProfilePage() {
                     onClick={addEducation}
                     variant="ghost"
                     size="sm"
-                    className="text-forest-green"
+                    className="text-accent-green"
                   >
                     <Plus className="w-4 h-4 mr-1" />
                     Add
@@ -356,12 +356,12 @@ export default function EditProfilePage() {
                       </button>
                     </div>
                     <Input
-                      value={edu.school}
+                      value={edu.school || ''}
                       onChange={(e) => updateEducation(index, 'school', e.target.value)}
                       placeholder="School name"
                     />
                     <Input
-                      value={edu.degree}
+                      value={edu.degree || ''}
                       onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                       placeholder="Degree"
                     />
