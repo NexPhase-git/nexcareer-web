@@ -1,23 +1,7 @@
 import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function GET(request: NextRequest) {
-  return await updateSession(request)
-}
-
-export async function POST(request: NextRequest) {
-  return await updateSession(request)
-}
-
-export async function PUT(request: NextRequest) {
-  return await updateSession(request)
-}
-
-export async function DELETE(request: NextRequest) {
-  return await updateSession(request)
-}
-
-export async function PATCH(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   return await updateSession(request)
 }
 
