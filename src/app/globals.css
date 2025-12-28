@@ -1,26 +1,213 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@custom-variant dark (&:is(.dark *));
+
+/* Satoshi font */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-satoshi), system-ui, sans-serif;
+  --font-heading: 'Satoshi', system-ui, sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* NexCareer Theme - Wise-inspired design */
+  --radius: 0.75rem;
+
+  /* Core colors */
+  --bright-green: #9FE870;
+  --forest-green: #163300;
+
+  /* Background */
+  --background: #FFFFFF;
+  --foreground: #0E0F0C;
+
+  /* Card */
+  --card: #FFFFFF;
+  --card-foreground: #0E0F0C;
+
+  /* Popover */
+  --popover: #FFFFFF;
+  --popover-foreground: #0E0F0C;
+
+  /* Primary - Forest Green (interactive elements) */
+  --primary: #163300;
+  --primary-foreground: #FFFFFF;
+
+  /* Secondary - Bright Green (accent, buttons) */
+  --secondary: #9FE870;
+  --secondary-foreground: #163300;
+
+  /* Muted */
+  --muted: rgba(22, 51, 0, 0.08);
+  --muted-foreground: #6A6C6A;
+
+  /* Accent - Bright Green */
+  --accent: #9FE870;
+  --accent-foreground: #163300;
+
+  /* Destructive */
+  --destructive: #A8200D;
+
+  /* Border */
+  --border: rgba(14, 15, 12, 0.12);
+  --input: rgba(14, 15, 12, 0.12);
+  --ring: #163300;
+
+  /* Success/Warning */
+  --success: #2F5711;
+  --warning: #EDC843;
+
+  /* Content colors */
+  --content-primary: #0E0F0C;
+  --content-secondary: #454745;
+  --content-tertiary: #6A6C6A;
+
+  /* Chart colors */
+  --chart-1: #9FE870;
+  --chart-2: #163300;
+  --chart-3: #2F5711;
+  --chart-4: #EDC843;
+  --chart-5: #A8200D;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0E0F0C;
+  --sidebar-primary: #163300;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(22, 51, 0, 0.08);
+  --sidebar-accent-foreground: #163300;
+  --sidebar-border: rgba(14, 15, 12, 0.12);
+  --sidebar-ring: #163300;
+}
+
+.dark {
+  --background: #0E0F0C;
+  --foreground: #FFFFFF;
+  --card: #1A1B18;
+  --card-foreground: #FFFFFF;
+  --popover: #1A1B18;
+  --popover-foreground: #FFFFFF;
+  --primary: #9FE870;
+  --primary-foreground: #163300;
+  --secondary: #163300;
+  --secondary-foreground: #9FE870;
+  --muted: rgba(159, 232, 112, 0.08);
+  --muted-foreground: #9CA3AF;
+  --accent: #9FE870;
+  --accent-foreground: #163300;
+  --destructive: #EF4444;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #9FE870;
+  --sidebar: #1A1B18;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #9FE870;
+  --sidebar-primary-foreground: #163300;
+  --sidebar-accent: rgba(159, 232, 112, 0.08);
+  --sidebar-accent-foreground: #9FE870;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #9FE870;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Satoshi', system-ui, sans-serif;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom utility classes matching Flutter NexUI */
+.text-content-primary {
+  color: var(--content-primary);
+}
+
+.text-content-secondary {
+  color: var(--content-secondary);
+}
+
+.text-content-tertiary {
+  color: var(--content-tertiary);
+}
+
+.bg-bright-green {
+  background-color: var(--bright-green);
+}
+
+.bg-forest-green {
+  background-color: var(--forest-green);
+}
+
+.text-bright-green {
+  color: var(--bright-green);
+}
+
+.text-forest-green {
+  color: var(--forest-green);
 }
