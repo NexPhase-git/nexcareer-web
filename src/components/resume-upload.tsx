@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 interface ResumeUploadProps {
   onSuccess?: () => void
   className?: string
-  variant?: 'button' | 'card'
+  variant?: 'button' | 'card' | 'quickAction'
 }
 
 export function ResumeUpload({ onSuccess, className, variant = 'button' }: ResumeUploadProps) {
@@ -63,10 +63,12 @@ export function ResumeUpload({ onSuccess, className, variant = 'button' }: Resum
         throw new Error(data.error || 'Upload failed')
       }
 
-      toast.success('Resume uploaded successfully!')
-
       if (data.profile) {
-        toast.success('Profile updated with resume data!')
+        toast.success('Resume parsed! Your profile has been updated.')
+      } else if (data.message) {
+        toast.warning(data.message)
+      } else {
+        toast.success('Resume uploaded successfully!')
       }
 
       onSuccess?.()
@@ -85,6 +87,35 @@ export function ResumeUpload({ onSuccess, className, variant = 'button' }: Resum
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  // Quick action style (for dashboard sidebar)
+  if (variant === 'quickAction') {
+    return (
+      <>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className={className}
+        >
+          {isUploading ? (
+            <Loader2 className="w-5 h-5 text-forest-green animate-spin" />
+          ) : (
+            <Upload className="w-5 h-5 text-forest-green" />
+          )}
+          <span className="text-sm font-medium text-forest-green">
+            {isUploading ? 'Uploading...' : 'Upload Resume'}
+          </span>
+        </button>
+      </>
+    )
   }
 
   if (variant === 'card') {

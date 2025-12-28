@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { Brain, Send, RefreshCw, Loader2, User } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
@@ -193,7 +194,13 @@ export default function AssistantPage() {
                         : 'bg-card border border-border rounded-bl-sm'
                     }`}
                   >
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.role === 'user' ? (
+                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    ) : (
+                      <div className="text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0 prose-headings:text-content-primary prose-p:text-content-primary prose-li:text-content-primary prose-strong:text-content-primary prose-code:text-forest-green prose-code:bg-[rgba(22,51,0,0.08)] prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[rgba(22,51,0,0.08)] prose-pre:text-content-primary">
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
 
                   {message.role === 'user' && (

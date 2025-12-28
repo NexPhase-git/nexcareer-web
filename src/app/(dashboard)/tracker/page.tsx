@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Briefcase, Loader2 } from 'lucide-react'
+import { Plus, Briefcase, Loader2, Search } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -111,13 +111,20 @@ export default function TrackerPage() {
               {applications.length} total applications
             </p>
           </div>
-          <Link href="/tracker/add">
-            <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Add Application</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/search">
+              <Button variant="outline" size="icon" className="border-border">
+                <Search className="w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/tracker/add">
+              <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Add Application</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Filter Chips */}
@@ -156,9 +163,9 @@ export default function TrackerPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredApplications.map((app) => (
-              <Link key={app.id} href={`/tracker/${app.id}`}>
+              <Link key={app.id} href={`/tracker/${app.id}`} className="block">
                 <Card className="border-border hover:border-forest-green transition-colors cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">

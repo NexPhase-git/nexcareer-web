@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { extractText } from 'unpdf'
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const MODEL = 'llama-3.1-8b-instant'
@@ -52,12 +53,18 @@ export async function POST(request: NextRequest) {
       .from('resumes')
       .getPublicUrl(fileName)
 
-    // For now, we'll extract text client-side and send it
-    // In a production app, you'd use a PDF parsing service here
-    const resumeText = formData.get('text') as string
+    // Extract text from PDF server-side
+    let resumeText = ''
+    try {
+      const { text } = await extractText(buffer)
+      // text is an array of strings (one per page), join them
+      resumeText = Array.isArray(text) ? text.join('\n') : text
+    } catch (pdfError) {
+      console.error('PDF parsing error:', pdfError)
+    }
 
-    if (!resumeText) {
-      // Just save the URL without parsing
+    if (!resumeText || resumeText.trim().length < 50) {
+      // Just save the URL without parsing if text extraction failed or too short
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
@@ -70,7 +77,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 })
       }
 
-      return NextResponse.json({ success: true, resumeUrl: publicUrl })
+      return NextResponse.json({
+        success: true,
+        resumeUrl: publicUrl,
+        message: 'Resume uploaded but text could not be extracted. Please update your profile manually.'
+      })
     }
 
     // Parse resume with Groq
@@ -123,21 +134,32 @@ Rules:
 
     const parsedData = JSON.parse(content)
 
-    // Save to profile
+    // Fetch existing profile to merge data
+    const { data: existingProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    // Merge: use new value if it exists, otherwise keep existing
+    const mergedProfile = {
+      user_id: user.id,
+      name: parsedData.name || existingProfile?.name || null,
+      email: parsedData.email || existingProfile?.email || null,
+      phone: parsedData.phone || existingProfile?.phone || null,
+      summary: parsedData.summary || existingProfile?.summary || null,
+      // For arrays, use new data if it has items, otherwise keep existing
+      skills: (parsedData.skills?.length > 0) ? parsedData.skills : (existingProfile?.skills || []),
+      education: (parsedData.education?.length > 0) ? parsedData.education : (existingProfile?.education || []),
+      experience: (parsedData.experience?.length > 0) ? parsedData.experience : (existingProfile?.experience || []),
+      resume_url: publicUrl,
+      updated_at: new Date().toISOString(),
+    }
+
+    // Save merged profile
     const { error: profileError } = await supabase
       .from('profiles')
-      .upsert({
-        user_id: user.id,
-        name: parsedData.name,
-        email: parsedData.email,
-        phone: parsedData.phone,
-        summary: parsedData.summary,
-        skills: parsedData.skills || [],
-        education: parsedData.education || [],
-        experience: parsedData.experience || [],
-        resume_url: publicUrl,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+      .upsert(mergedProfile, { onConflict: 'user_id' })
 
     if (profileError) {
       console.error('Profile error:', profileError)

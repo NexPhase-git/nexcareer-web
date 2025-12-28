@@ -76,7 +76,7 @@ function QuickAction({ icon, label, href, onClick, isLoading }: QuickActionProps
 
 const statusColors: Record<ApplicationStatus, string> = {
   Saved: 'bg-gray-100 text-gray-700',
-  Applied: 'bg-blue-100 text-blue-700',
+  Applied: 'bg-[rgba(22,51,0,0.08)] text-forest-green border border-forest-green',
   Interview: 'bg-amber-100 text-amber-700',
   Offer: 'bg-green-100 text-green-700',
   Rejected: 'bg-red-100 text-red-700',
@@ -403,25 +403,26 @@ export default function DashboardPage() {
 
             {/* Quick Actions */}
             <Card className="border-border">
-              <CardContent className="p-4 space-y-2">
+              <CardContent className="p-4 space-y-1">
                 <Link
                   href="/tracker/add"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <Plus className="w-5 h-5 text-forest-green" />
+                  <Plus className="w-5 h-5 text-content-secondary" />
                   <span className="text-sm font-medium text-content-primary">
                     Add Application
                   </span>
                 </Link>
                 <ResumeUpload
+                  variant="quickAction"
                   onSuccess={loadData}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full justify-start"
+                  className="flex items-center gap-3 p-3 rounded-lg bg-bright-green hover:bg-[#8AD960] transition-colors w-full"
                 />
                 <Link
                   href="/assistant"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <MessageSquare className="w-5 h-5 text-forest-green" />
+                  <MessageSquare className="w-5 h-5 text-content-secondary" />
                   <span className="text-sm font-medium text-content-primary">
                     AI Assistant
                   </span>
@@ -430,7 +431,7 @@ export default function DashboardPage() {
                   href="/coach"
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
                 >
-                  <GraduationCap className="w-5 h-5 text-forest-green" />
+                  <GraduationCap className="w-5 h-5 text-content-secondary" />
                   <span className="text-sm font-medium text-content-primary">
                     Interview Coach
                   </span>
