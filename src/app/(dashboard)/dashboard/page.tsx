@@ -119,18 +119,28 @@ export default function DashboardPage() {
       setProfile(profileData as UserProfile)
     }
 
-    // Load applications
-    const { data: appsData } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(5)
+    // Load applications - parallel queries for efficiency
+    const [recentAppsResult, allStatusesResult] = await Promise.all([
+      // Query 1: Recent 5 applications for display
+      supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      // Query 2: All statuses for accurate counts (minimal data)
+      supabase
+        .from('applications')
+        .select('status')
+        .eq('user_id', user.id),
+    ])
 
-    if (appsData) {
-      setApplications(appsData as Application[])
+    if (recentAppsResult.data) {
+      setApplications(recentAppsResult.data as Application[])
+    }
 
-      // Calculate status counts
+    if (allStatusesResult.data) {
+      // Calculate status counts from all applications
       const counts: Record<ApplicationStatus, number> = {
         Saved: 0,
         Applied: 0,
@@ -139,7 +149,7 @@ export default function DashboardPage() {
         Rejected: 0,
       }
 
-      appsData.forEach((app) => {
+      allStatusesResult.data.forEach((app) => {
         counts[app.status as ApplicationStatus]++
       })
 
