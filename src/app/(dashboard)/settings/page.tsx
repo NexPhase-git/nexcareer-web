@@ -4,12 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Settings,
-  User,
-  Lock,
   Download,
-  Trash2,
-  FileX,
   ExternalLink,
   Loader2,
   AlertTriangle,
@@ -57,11 +52,6 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    loadData()
-  }, [])
-
   const loadData = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -94,6 +84,12 @@ export default function SettingsPage() {
     setApplicationCount(count || 0)
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    setMounted(true)
+    loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // ============================================
   // ACCOUNT ACTIONS

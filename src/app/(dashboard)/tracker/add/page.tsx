@@ -8,7 +8,6 @@ import {
   Building2,
   Briefcase,
   Link as LinkIcon,
-  FileText,
   Calendar,
   Loader2,
 } from 'lucide-react'
@@ -19,7 +18,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import type { ApplicationStatus, APPLICATION_STATUSES } from '@/types/database'
+import type { ApplicationStatus } from '@/types/database'
 
 const statusOptions: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
 
@@ -29,6 +28,7 @@ export default function AddApplicationPage() {
   const [position, setPosition] = useState('')
   const [status, setStatus] = useState<ApplicationStatus>('Applied')
   const [appliedDate, setAppliedDate] = useState(new Date().toISOString().split('T')[0])
+  const [interviewDate, setInterviewDate] = useState('')
   const [url, setUrl] = useState('')
   const [notes, setNotes] = useState('')
   const [isSaving, setIsSaving] = useState(false)
@@ -65,6 +65,7 @@ export default function AddApplicationPage() {
         position: position.trim(),
         status,
         applied_date: appliedDate || null,
+        interview_date: status === 'Interview' && interviewDate ? interviewDate : null,
         url: url.trim() || null,
         notes: notes.trim() || null,
       })
@@ -148,6 +149,27 @@ export default function AddApplicationPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Interview Date - only shown when status is Interview */}
+                {status === 'Interview' && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-content-primary">
+                      Interview Date
+                    </Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary" />
+                      <Input
+                        type="date"
+                        value={interviewDate}
+                        onChange={(e) => setInterviewDate(e.target.value)}
+                        className="pl-10 h-12"
+                      />
+                    </div>
+                    <p className="text-xs text-content-tertiary">
+                      Set this to receive a reminder before your interview
+                    </p>
+                  </div>
+                )}
 
                 {/* Applied Date */}
                 <div className="space-y-2">

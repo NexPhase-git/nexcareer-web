@@ -15,11 +15,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
-  Bell,
   X,
   Plus,
   Sun,
   Moon,
+  BarChart3,
 } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { Button } from '@/components/ui/button'
@@ -27,16 +27,17 @@ import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import type { Application, ApplicationStatus } from '@/types/database'
+import { NotificationDropdown } from '@/components/notifications/notification-dropdown'
+import type { Application } from '@/types/database'
 
 // Theme Toggle Component
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // This pattern is necessary to prevent hydration mismatch with next-themes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMounted(true) }, [])
 
   if (!mounted) {
     return (
@@ -111,6 +112,12 @@ const navItems: NavItem[] = [
     icon: <GraduationCap className="w-5 h-5" strokeWidth={1.5} />,
     activeIcon: <GraduationCap className="w-5 h-5" strokeWidth={2} />
   },
+  {
+    href: '/dashboard/analytics',
+    label: 'Analytics',
+    icon: <BarChart3 className="w-5 h-5" strokeWidth={1.5} />,
+    activeIcon: <BarChart3 className="w-5 h-5" strokeWidth={2} />
+  },
 ]
 
 interface AppShellProps {
@@ -121,6 +128,7 @@ interface AppShellProps {
 }
 
 export function AppShell({ children, title, userName, actions }: AppShellProps) {
+  void actions // Intentionally unused - kept for API compatibility
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -303,10 +311,8 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
     const [matchingActions, setMatchingActions] = useState<typeof quickActions>([])
     const [isSearching, setIsSearching] = useState(false)
     const [showUserMenu, setShowUserMenu] = useState(false)
-    const [showNotifications, setShowNotifications] = useState(false)
     const searchRef = useRef<HTMLDivElement>(null)
     const userMenuRef = useRef<HTMLDivElement>(null)
-    const notifRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
       const handleClickOutside = (e: MouseEvent) => {
@@ -315,9 +321,6 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
         }
         if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
           setShowUserMenu(false)
-        }
-        if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
-          setShowNotifications(false)
         }
       }
       document.addEventListener('mousedown', handleClickOutside)
@@ -461,25 +464,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
           <ThemeToggle />
 
           {/* Notification Bell */}
-          <div ref={notifRef} className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                showNotifications ? 'bg-muted' : 'hover:bg-muted'
-              }`}
-            >
-              <Bell className="w-5 h-5 text-content-secondary" />
-            </button>
-
-            {showNotifications && (
-              <div className="absolute top-12 right-0 w-[280px] bg-card border border-border rounded-xl shadow-lg p-4 z-50">
-                <div className="flex flex-col items-center gap-2">
-                  <Bell className="w-8 h-8 text-content-secondary" />
-                  <p className="text-sm text-content-secondary">No new notifications</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <NotificationDropdown />
 
           {/* User Avatar */}
           <div ref={userMenuRef} className="relative">
@@ -690,6 +675,7 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
           >
             <Search className="w-5 h-5" />
           </Button>
+          <NotificationDropdown />
           <ThemeToggle />
         </div>
       </header>

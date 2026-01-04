@@ -51,10 +51,6 @@ export default function CoachPage() {
   const [isGettingFeedback, setIsGettingFeedback] = useState(false)
   const [practiceStarted, setPracticeStarted] = useState(false)
 
-  useEffect(() => {
-    loadApplications()
-  }, [])
-
   const loadApplications = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -76,6 +72,11 @@ export default function CoachPage() {
 
     setIsLoadingApps(false)
   }
+
+  useEffect(() => {
+    loadApplications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const startPractice = async () => {
     if (!selectedType) return
@@ -101,7 +102,8 @@ export default function CoachPage() {
       const data = await response.json()
 
       if (data.error) {
-        throw new Error(data.error)
+        console.error('Failed to generate questions:', data.error)
+        return
       }
 
       setQuestions(data.questions)
@@ -131,7 +133,9 @@ export default function CoachPage() {
       const data = await response.json()
 
       if (data.error) {
-        throw new Error(data.error)
+        console.error('Failed to get feedback:', data.error)
+        setFeedback('Sorry, I could not generate feedback. Please try again.')
+        return
       }
 
       setFeedback(data.feedback)

@@ -8,7 +8,6 @@ import {
   User,
   Mail,
   Phone,
-  FileText,
   X,
   Plus,
   Loader2,
@@ -36,10 +35,6 @@ export default function EditProfilePage() {
   const [newSkill, setNewSkill] = useState('')
   const [education, setEducation] = useState<Education[]>([])
   const [experience, setExperience] = useState<Experience[]>([])
-
-  useEffect(() => {
-    loadProfile()
-  }, [])
 
   const loadProfile = async () => {
     const supabase = createClient()
@@ -69,6 +64,11 @@ export default function EditProfilePage() {
 
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -252,7 +252,12 @@ export default function EditProfilePage() {
                     onChange={(e) => setNewSkill(e.target.value)}
                     placeholder="Add a skill"
                     className="h-10"
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        addSkill()
+                      }
+                    }}
                   />
                   <Button
                     type="button"

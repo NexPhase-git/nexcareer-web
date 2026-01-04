@@ -36,11 +36,11 @@ export default function EditApplicationPage() {
   const params = useParams()
   const applicationId = params.id as string
 
-  const [application, setApplication] = useState<Application | null>(null)
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
   const [status, setStatus] = useState<ApplicationStatus>('Applied')
   const [appliedDate, setAppliedDate] = useState('')
+  const [interviewDate, setInterviewDate] = useState('')
   const [url, setUrl] = useState('')
   const [notes, setNotes] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -49,34 +49,37 @@ export default function EditApplicationPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
-    loadApplication()
-  }, [applicationId])
+    let isMounted = true
+    const loadApplication = async () => {
+      const supabase = createClient()
 
-  const loadApplication = async () => {
-    const supabase = createClient()
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('id', applicationId)
+        .single()
 
-    const { data, error } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('id', applicationId)
-      .single()
+      if (!isMounted) return
 
-    if (error || !data) {
-      toast.error('Application not found')
-      router.push('/tracker')
-      return
+      if (error || !data) {
+        toast.error('Application not found')
+        router.push('/tracker')
+        return
+      }
+
+      const app = data as Application
+      setCompany(app.company)
+      setPosition(app.position)
+      setStatus(app.status)
+      setAppliedDate(app.applied_date || '')
+      setInterviewDate(app.interview_date || '')
+      setUrl(app.url || '')
+      setNotes(app.notes || '')
+      setIsLoading(false)
     }
-
-    const app = data as Application
-    setApplication(app)
-    setCompany(app.company)
-    setPosition(app.position)
-    setStatus(app.status)
-    setAppliedDate(app.applied_date || '')
-    setUrl(app.url || '')
-    setNotes(app.notes || '')
-    setIsLoading(false)
-  }
+    loadApplication()
+    return () => { isMounted = false }
+  }, [applicationId, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,6 +105,7 @@ export default function EditApplicationPage() {
         position: position.trim(),
         status,
         applied_date: appliedDate || null,
+        interview_date: status === 'Interview' && interviewDate ? interviewDate : null,
         url: url.trim() || null,
         notes: notes.trim() || null,
         updated_at: new Date().toISOString(),
@@ -230,6 +234,27 @@ export default function EditApplicationPage() {
                     ))}
                   </select>
                 </div>
+
+                {/* Interview Date - only shown when status is Interview */}
+                {status === 'Interview' && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-content-primary">
+                      Interview Date
+                    </Label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-content-secondary" />
+                      <Input
+                        type="date"
+                        value={interviewDate}
+                        onChange={(e) => setInterviewDate(e.target.value)}
+                        className="pl-10 h-12"
+                      />
+                    </div>
+                    <p className="text-xs text-content-tertiary">
+                      Set this to receive a reminder before your interview
+                    </p>
+                  </div>
+                )}
 
                 {/* Applied Date */}
                 <div className="space-y-2">

@@ -40,6 +40,8 @@ export interface Application {
   applied_date: string | null  // Flutter uses 'applied_date'
   notes: string | null
   url: string | null  // Flutter uses 'url', not 'job_link'
+  followed_up_at?: string | null  // For follow-up tracking
+  interview_date?: string | null  // For upcoming interview reminders
   created_at?: string
   updated_at?: string
 }
