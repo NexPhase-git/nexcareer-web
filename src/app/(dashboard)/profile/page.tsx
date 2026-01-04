@@ -27,10 +27,6 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
-
   const loadProfile = async () => {
     const supabase = createClient()
 
@@ -52,6 +48,11 @@ export default function ProfilePage() {
 
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    loadProfile()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (isLoading) {
     return (

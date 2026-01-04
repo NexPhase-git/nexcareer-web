@@ -14,12 +14,15 @@ import {
   GraduationCap,
   Briefcase,
   Loader2,
+  BarChart3,
+  FileSpreadsheet,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ResumeUpload } from '@/components/resume-upload'
+import { ImportModal } from '@/components/import/import-modal'
 import { createClient } from '@/lib/supabase/client'
 import type { UserProfile, Application, ApplicationStatus } from '@/types/database'
 
@@ -94,10 +97,7 @@ export default function DashboardPage() {
     Rejected: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadData()
-  }, [])
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const loadData = async () => {
     const supabase = createClient()
@@ -159,6 +159,17 @@ export default function DashboardPage() {
     setIsLoading(false)
   }
 
+  useEffect(() => {
+    let isMounted = true
+    const fetchData = async () => {
+      await loadData()
+      if (!isMounted) return
+    }
+    fetchData()
+    return () => { isMounted = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
@@ -185,6 +196,15 @@ export default function DashboardPage() {
         </h2>
 
         {/* Stats */}
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-semibold text-content-primary">Overview</h3>
+          <Link href="/dashboard/analytics">
+            <Button variant="ghost" size="sm" className="text-accent-green gap-1">
+              <BarChart3 className="w-4 h-4" />
+              View Analytics
+            </Button>
+          </Link>
+        </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<FileText className="w-5 h-5 text-accent-green" />}
@@ -270,6 +290,16 @@ export default function DashboardPage() {
                 icon={<GraduationCap className="w-6 h-6" />}
                 label="Coach"
                 href="/coach"
+              />
+              <QuickAction
+                icon={<BarChart3 className="w-6 h-6" />}
+                label="Analytics"
+                href="/dashboard/analytics"
+              />
+              <QuickAction
+                icon={<FileSpreadsheet className="w-6 h-6" />}
+                label="Import"
+                onClick={() => setShowImportModal(true)}
               />
             </div>
           </div>
@@ -446,11 +476,36 @@ export default function DashboardPage() {
                     Interview Coach
                   </span>
                 </Link>
+                <Link
+                  href="/dashboard/analytics"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <BarChart3 className="w-5 h-5 text-content-secondary" />
+                  <span className="text-sm font-medium text-content-primary">
+                    View Analytics
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full"
+                >
+                  <FileSpreadsheet className="w-5 h-5 text-content-secondary" />
+                  <span className="text-sm font-medium text-content-primary">
+                    Import CSV
+                  </span>
+                </button>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Import Modal */}
+      <ImportModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={loadData}
+      />
     </AppShell>
   )
 }

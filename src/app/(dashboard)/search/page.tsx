@@ -67,16 +67,6 @@ function SearchContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasSearched, setHasSearched] = useState(false)
 
-  useEffect(() => {
-    loadApplications()
-  }, [])
-
-  useEffect(() => {
-    if (!isLoading && initialQuery) {
-      performSearch(initialQuery)
-    }
-  }, [isLoading, initialQuery])
-
   const loadApplications = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -98,6 +88,11 @@ function SearchContent() {
 
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    loadApplications()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const performSearch = (searchQuery: string) => {
     const trimmed = searchQuery.trim().toLowerCase()
@@ -125,6 +120,13 @@ function SearchContent() {
     setResults(filtered)
     setHasSearched(true)
   }
+
+  useEffect(() => {
+    if (!isLoading && initialQuery) {
+      performSearch(initialQuery)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, initialQuery])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value

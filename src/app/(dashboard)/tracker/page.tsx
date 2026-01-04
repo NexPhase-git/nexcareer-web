@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Briefcase, Loader2, Search } from 'lucide-react'
+import { Plus, Briefcase, Loader2, Search, FileSpreadsheet } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { ImportModal } from '@/components/import/import-modal'
 import { createClient } from '@/lib/supabase/client'
 import type { Application, ApplicationStatus } from '@/types/database'
 
@@ -26,10 +27,7 @@ export default function TrackerPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<FilterStatus>('all')
-
-  useEffect(() => {
-    loadApplications()
-  }, [])
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const loadApplications = async () => {
     const supabase = createClient()
@@ -53,6 +51,17 @@ export default function TrackerPage() {
 
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    let isMounted = true
+    const fetchData = async () => {
+      await loadApplications()
+      if (!isMounted) return
+    }
+    fetchData()
+    return () => { isMounted = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const filteredApplications = filter === 'all'
     ? applications
@@ -89,13 +98,30 @@ export default function TrackerPage() {
           <p className="text-content-secondary mb-6">
             Start tracking your job applications to stay organized
           </p>
-          <Link href="/tracker/add">
-            <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Application
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowImportModal(true)}
+              className="border-border"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Import CSV
             </Button>
-          </Link>
+            <Link href="/tracker/add">
+              <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Application
+              </Button>
+            </Link>
+          </div>
         </div>
+
+        {/* Import Modal */}
+        <ImportModal
+          open={showImportModal}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={loadApplications}
+        />
       </AppShell>
     )
   }
@@ -117,6 +143,15 @@ export default function TrackerPage() {
                 <Search className="w-4 h-4" />
               </Button>
             </Link>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowImportModal(true)}
+              className="border-border"
+              title="Import CSV"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+            </Button>
             <Link href="/tracker/add">
               <Button className="bg-bright-green hover:bg-[#8AD960] text-forest-green">
                 <Plus className="w-4 h-4 mr-2" />
@@ -193,6 +228,13 @@ export default function TrackerPage() {
           </div>
         )}
       </div>
+
+      {/* Import Modal */}
+      <ImportModal
+        open={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={loadApplications}
+      />
     </AppShell>
   )
 }
