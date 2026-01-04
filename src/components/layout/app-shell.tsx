@@ -223,7 +223,15 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
         {/* Nav Items */}
         <div className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            // Check if there's a more specific nav item that matches
+            const hasMoreSpecificMatch = navItems.some(
+              (other) => other.href !== item.href &&
+                         other.href.startsWith(item.href + '/') &&
+                         pathname.startsWith(other.href)
+            )
+            const isActive = hasMoreSpecificMatch
+              ? false
+              : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}
@@ -612,7 +620,15 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
       {/* Nav Items */}
       <div className="flex-1 py-4 px-3 space-y-1">
         {navItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          // Check if there's a more specific nav item that matches
+          const hasMoreSpecificMatch = navItems.some(
+            (other) => other.href !== item.href &&
+                       other.href.startsWith(item.href + '/') &&
+                       pathname.startsWith(other.href)
+          )
+          const isActive = hasMoreSpecificMatch
+            ? false
+            : pathname === item.href || pathname.startsWith(item.href + '/')
           return (
             <Link
               key={item.href}
@@ -698,7 +714,15 @@ export function AppShell({ children, title, userName, actions }: AppShellProps) 
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border">
         <div className="flex items-center justify-around py-2">
           {navItems.slice(0, 5).map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            // Check if there's a more specific nav item that matches
+            const hasMoreSpecificMatch = navItems.some(
+              (other) => other.href !== item.href &&
+                         other.href.startsWith(item.href + '/') &&
+                         pathname.startsWith(other.href)
+            )
+            const isActive = hasMoreSpecificMatch
+              ? false
+              : pathname === item.href || pathname.startsWith(item.href + '/')
             return (
               <Link
                 key={item.href}
