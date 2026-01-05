@@ -31,6 +31,12 @@ export type ApplicationStatus = 'Saved' | 'Applied' | 'Interview' | 'Offer' | 'R
 
 export const APPLICATION_STATUSES: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
 
+export interface SavedMessage {
+  id: string
+  content: string
+  saved_at: string
+}
+
 export interface Application {
   id?: string
   user_id: string
@@ -42,6 +48,7 @@ export interface Application {
   url: string | null  // Flutter uses 'url', not 'job_link'
   followed_up_at?: string | null  // For follow-up tracking
   interview_date?: string | null  // For upcoming interview reminders
+  saved_messages?: SavedMessage[]  // Saved AI messages for this application
   created_at?: string
   updated_at?: string
 }
