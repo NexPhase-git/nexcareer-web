@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState, useRef } from 'react'
+import { Suspense, useState, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -18,8 +18,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase/client'
-import type { Application, ApplicationStatus } from '@/types/database'
+import { useCurrentUser, useApplications } from '@/hooks'
+import { type Application, type ApplicationStatus } from '@nexcareer/core'
 
 const statusColors: Record<ApplicationStatus, string> = {
   Saved: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
@@ -61,49 +61,25 @@ function SearchContent() {
   const initialQuery = searchParams.get('q') || ''
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { applications, isLoading: isLoadingApps } = useApplications({
+    userId: user?.id ?? null,
+  })
+
   const [query, setQuery] = useState(initialQuery)
-  const [allApplications, setAllApplications] = useState<Application[]>([])
-  const [results, setResults] = useState<Application[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasSearched, setHasSearched] = useState(false)
+  const [hasSearched, setHasSearched] = useState(!!initialQuery)
 
-  const loadApplications = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+  const isLoading = isLoadingUser || isLoadingApps
 
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (data) {
-      setAllApplications(data as Application[])
-    }
-
-    setIsLoading(false)
-  }
-
-  useEffect(() => {
-    loadApplications()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const performSearch = (searchQuery: string) => {
-    const trimmed = searchQuery.trim().toLowerCase()
+  // Perform local search on applications
+  const results = useMemo(() => {
+    const trimmed = query.trim().toLowerCase()
 
     if (!trimmed) {
-      setResults([])
-      setHasSearched(false)
-      return
+      return []
     }
 
-    const filtered = allApplications.filter((app) => {
+    return applications.filter((app) => {
       const company = app.company.toLowerCase()
       const position = app.position.toLowerCase()
       const notes = (app.notes || '').toLowerCase()
@@ -116,27 +92,16 @@ function SearchContent() {
         status.includes(trimmed)
       )
     })
-
-    setResults(filtered)
-    setHasSearched(true)
-  }
-
-  useEffect(() => {
-    if (!isLoading && initialQuery) {
-      performSearch(initialQuery)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, initialQuery])
+  }, [applications, query])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setQuery(value)
-    performSearch(value)
+    setHasSearched(!!value.trim())
   }
 
   const clearSearch = () => {
     setQuery('')
-    setResults([])
     setHasSearched(false)
     inputRef.current?.focus()
   }
@@ -219,11 +184,11 @@ function SearchContent() {
                 </div>
               </div>
 
-              {allApplications.length > 0 && (
+              {applications.length > 0 && (
                 <div>
                   <h2 className="text-lg font-semibold text-content-primary mb-4">Recent Applications</h2>
                   <div className="space-y-3">
-                    {allApplications.slice(0, 5).map((app) => (
+                    {applications.slice(0, 5).map((app) => (
                       <ApplicationItem key={app.id} application={app} />
                     ))}
                   </div>
@@ -285,9 +250,9 @@ function ApplicationItem({ application }: { application: Application }) {
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-content-primary truncate">{application.position}</p>
               <p className="text-sm text-content-secondary truncate">{application.company}</p>
-              {application.applied_date && (
+              {application.appliedDate && (
                 <p className="text-xs text-content-tertiary mt-1">
-                  Applied {new Date(application.applied_date).toLocaleDateString()}
+                  Applied {application.appliedDate.toLocaleDateString()}
                 </p>
               )}
             </div>

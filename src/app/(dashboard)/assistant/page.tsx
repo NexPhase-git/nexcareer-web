@@ -1,118 +1,28 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Brain, Send, RefreshCw, Loader2, User } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
-import type { ChatMessage } from '@/types/database'
-
-const MAX_CHARACTERS = 500
-const COOLDOWN_MS = 2000
+import { useAssistant } from '@/hooks'
 
 export default function AssistantPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [isCooldown, setIsCooldown] = useState(false)
-  const [suggestedPrompts, setSuggestedPrompts] = useState<string[]>([])
-  const [isLoadingPrompts, setIsLoadingPrompts] = useState(true)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
-
-  useEffect(() => {
-    loadSuggestedPrompts()
-  }, [])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const loadSuggestedPrompts = async () => {
-    try {
-      const response = await fetch('/api/chat')
-      const data = await response.json()
-      setSuggestedPrompts(data.prompts || [])
-    } catch {
-      setSuggestedPrompts(['How can I improve my resume?', 'Give me tips for my job search'])
-    }
-    setIsLoadingPrompts(false)
-  }
-
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      })
-    }, 100)
-  }
-
-  const canSend = !isLoading && !isCooldown && input.length <= MAX_CHARACTERS
-
-  const sendMessage = async (text?: string) => {
-    const messageText = text || input.trim()
-    if (!messageText || !canSend) return
-
-    if (messageText.length > MAX_CHARACTERS) return
-
-    setInput('')
-
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: messageText,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setIsLoading(true)
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: messageText,
-          history: messages,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        throw new Error(data.error)
-      }
-
-      const assistantMessage: ChatMessage = {
-        role: 'assistant',
-        content: data.response,
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
-      startCooldown()
-    } catch (error) {
-      console.error('Chat error:', error)
-      const errorMessage: ChatMessage = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const startCooldown = () => {
-    setIsCooldown(true)
-    setTimeout(() => setIsCooldown(false), COOLDOWN_MS)
-  }
-
-  const resetChat = () => {
-    setMessages([])
-    loadSuggestedPrompts()
-  }
+  const {
+    messages,
+    input,
+    setInput,
+    isLoading,
+    isCooldown,
+    suggestedPrompts,
+    isLoadingPrompts,
+    canSend,
+    isOverLimit,
+    sendMessage,
+    resetChat,
+    scrollRef,
+    inputRef,
+    maxCharacters,
+  } = useAssistant()
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -120,8 +30,6 @@ export default function AssistantPage() {
       sendMessage()
     }
   }
-
-  const isOverLimit = input.length > MAX_CHARACTERS
 
   return (
     <AppShell
@@ -278,7 +186,7 @@ export default function AssistantPage() {
                   isOverLimit ? 'text-destructive font-semibold' : 'text-content-secondary'
                 }`}
               >
-                {input.length} / {MAX_CHARACTERS}
+                {input.length} / {maxCharacters}
               </span>
             </div>
           </div>

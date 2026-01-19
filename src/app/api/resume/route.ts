@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getServerCore } from '@/lib/core/server'
 import { extractText } from 'unpdf'
 import { isRateLimited, getClientIP, sanitizeFilename } from '@/lib/security'
-
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.1-8b-instant'
 
 // Allowed MIME types for resume upload
 const ALLOWED_MIME_TYPES = ['application/pdf']
@@ -57,34 +55,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get core for AI and storage services
+    const core = await getServerCore()
+
     // Sanitize filename and create safe path
     const safeName = sanitizeFilename(file.name.replace('.pdf', ''))
-    const fileName = `${user.id}/${Date.now()}_${safeName}.pdf`
+    const filePath = `${user.id}/${Date.now()}_${safeName}.pdf`
     const arrayBuffer = await file.arrayBuffer()
     const buffer = new Uint8Array(arrayBuffer)
 
-    const { error: uploadError } = await supabase.storage
-      .from('resumes')
-      .upload(fileName, buffer, {
-        contentType: 'application/pdf',
-        upsert: true,
-      })
+    // Upload to storage using core service
+    const uploadResult = await core.services.storage.upload({
+      bucket: 'resumes',
+      path: filePath,
+      file: new Blob([buffer], { type: 'application/pdf' }),
+      contentType: 'application/pdf',
+      upsert: true,
+    })
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
+    if (uploadResult.error || !uploadResult.data) {
+      console.error('Upload error:', uploadResult.error)
       return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('resumes')
-      .getPublicUrl(fileName)
+    const publicUrl = uploadResult.data
 
-    // Extract text from PDF server-side
+    // Extract text from PDF server-side using unpdf
     let resumeText = ''
     try {
       const { text } = await extractText(buffer)
-      // text is an array of strings (one per page), join them
       resumeText = Array.isArray(text) ? text.join('\n') : text
     } catch (pdfError) {
       console.error('PDF parsing error:', pdfError)
@@ -92,17 +91,10 @@ export async function POST(request: NextRequest) {
 
     if (!resumeText || resumeText.trim().length < 50) {
       // Just save the URL without parsing if text extraction failed or too short
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
-          resume_url: publicUrl,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' })
-
-      if (profileError) {
-        return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 })
-      }
+      await core.useCases.updateProfile.execute({
+        userId: user.id,
+        resumeUrl: publicUrl,
+      })
 
       return NextResponse.json({
         success: true,
@@ -111,87 +103,43 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Parse resume with Groq
-    const systemPrompt = `You are a resume parser. Extract information from the resume text and return ONLY valid JSON with this exact structure:
-{
-  "name": "Full name or null if not found",
-  "email": "Email address or null if not found",
-  "phone": "Phone number or null if not found",
-  "summary": "Professional summary or objective or null if not found",
-  "skills": ["skill1", "skill2"],
-  "education": [{"school": "School name", "degree": "Degree name", "year": "Year or date range"}],
-  "experience": [{"company": "Company name", "role": "Job title", "duration": "Date range", "description": "Brief description of responsibilities"}]
-}
+    // Parse resume with AI using core service
+    const aiResult = await core.services.ai.parseResume(resumeText)
 
-Rules:
-- Return ONLY the JSON object, no markdown, no explanation
-- Use null for fields you cannot find
-- Use empty arrays [] if no items found for skills, education, or experience
-- Keep descriptions concise (max 100 words each)
-- Extract ALL skills mentioned anywhere in the resume`
-
-    const groqResponse = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Parse this resume:\n\n${resumeText}` },
-        ],
-        temperature: 0.1,
-        max_tokens: 2048,
-      }),
-    })
-
-    if (!groqResponse.ok) {
+    if (aiResult.error || !aiResult.data) {
       return NextResponse.json({ error: 'Failed to parse resume' }, { status: 500 })
     }
 
-    const groqData = await groqResponse.json()
-    let content = groqData.choices[0].message.content.trim()
+    const parsedData = aiResult.data
 
-    // Remove markdown code blocks if present
-    if (content.startsWith('```')) {
-      content = content.replace(/^```json?\n?/, '').replace(/\n?```$/, '')
-    }
-
-    const parsedData = JSON.parse(content)
-
-    // Fetch existing profile to merge data
-    const { data: existingProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
+    // Get existing profile to merge data
+    const existingResult = await core.useCases.getProfile.execute({ userId: user.id })
+    const existingProfile = existingResult.profile
 
     // Merge: use new value if it exists, otherwise keep existing
     const mergedProfile = {
-      user_id: user.id,
       name: parsedData.name || existingProfile?.name || null,
       email: parsedData.email || existingProfile?.email || null,
       phone: parsedData.phone || existingProfile?.phone || null,
       summary: parsedData.summary || existingProfile?.summary || null,
       // For arrays, use new data if it has items, otherwise keep existing
-      skills: (parsedData.skills?.length > 0) ? parsedData.skills : (existingProfile?.skills || []),
-      education: (parsedData.education?.length > 0) ? parsedData.education : (existingProfile?.education || []),
-      experience: (parsedData.experience?.length > 0) ? parsedData.experience : (existingProfile?.experience || []),
-      resume_url: publicUrl,
-      updated_at: new Date().toISOString(),
+      skills: (parsedData.skills?.length ?? 0) > 0
+        ? parsedData.skills
+        : (existingProfile?.skills || []),
+      education: (parsedData.education?.length ?? 0) > 0
+        ? parsedData.education
+        : (existingProfile?.education || []),
+      experience: (parsedData.experience?.length ?? 0) > 0
+        ? parsedData.experience
+        : (existingProfile?.experience || []),
+      resumeUrl: publicUrl,
     }
 
-    // Save merged profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .upsert(mergedProfile, { onConflict: 'user_id' })
-
-    if (profileError) {
-      console.error('Profile error:', profileError)
-      return NextResponse.json({ error: 'Failed to save profile' }, { status: 500 })
-    }
+    // Save merged profile using use case
+    await core.useCases.updateProfile.execute({
+      userId: user.id,
+      ...mergedProfile,
+    })
 
     return NextResponse.json({
       success: true,

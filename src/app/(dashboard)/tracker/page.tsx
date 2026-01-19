@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Plus, Briefcase, Loader2, Search, FileSpreadsheet } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
@@ -9,8 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ImportModal } from '@/components/import/import-modal'
-import { createClient } from '@/lib/supabase/client'
-import type { Application, ApplicationStatus } from '@/types/database'
+import { useCurrentUser, useApplications } from '@/hooks'
+import { APPLICATION_STATUSES, type ApplicationStatus } from '@nexcareer/core'
 
 const statusColors: Record<ApplicationStatus, string> = {
   Saved: 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700',
@@ -23,56 +22,27 @@ const statusColors: Record<ApplicationStatus, string> = {
 type FilterStatus = ApplicationStatus | 'all'
 
 export default function TrackerPage() {
-  const router = useRouter()
-  const [applications, setApplications] = useState<Application[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // Use clean architecture hooks
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { applications, isLoading: isLoadingApps, reload } = useApplications({
+    userId: user?.id ?? null,
+  })
+
   const [filter, setFilter] = useState<FilterStatus>('all')
   const [showImportModal, setShowImportModal] = useState(false)
 
-  const loadApplications = async () => {
-    const supabase = createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('applied_date', { ascending: false })
-      .order('created_at', { ascending: false })
-
-    if (data) {
-      setApplications(data as Application[])
-    }
-
-    setIsLoading(false)
-  }
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchData = async () => {
-      await loadApplications()
-      if (!isMounted) return
-    }
-    fetchData()
-    return () => { isMounted = false }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const filteredApplications = filter === 'all'
-    ? applications
-    : applications.filter((app) => app.status === filter)
+  // Derived state using useMemo
+  const filteredApplications = useMemo(() => {
+    if (filter === 'all') return applications
+    return applications.filter((app) => app.status === filter)
+  }, [applications, filter])
 
   const getStatusCount = (status: ApplicationStatus | 'all') => {
     if (status === 'all') return applications.length
     return applications.filter((app) => app.status === status).length
   }
 
-  const allStatuses: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
+  const isLoading = isLoadingUser || isLoadingApps
 
   if (isLoading) {
     return (
@@ -120,7 +90,7 @@ export default function TrackerPage() {
         <ImportModal
           open={showImportModal}
           onClose={() => setShowImportModal(false)}
-          onSuccess={loadApplications}
+          onSuccess={reload}
         />
       </AppShell>
     )
@@ -174,7 +144,7 @@ export default function TrackerPage() {
           >
             All ({getStatusCount('all')})
           </button>
-          {allStatuses.map((status) => (
+          {APPLICATION_STATUSES.map((status) => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -211,9 +181,9 @@ export default function TrackerPage() {
                         <p className="text-sm text-content-secondary truncate">
                           {app.company}
                         </p>
-                        {app.applied_date && (
+                        {app.appliedDate && (
                           <p className="text-xs text-content-tertiary mt-1">
-                            Applied {new Date(app.applied_date).toLocaleDateString()}
+                            Applied {app.appliedDate.toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -233,7 +203,7 @@ export default function TrackerPage() {
       <ImportModal
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onSuccess={loadApplications}
+        onSuccess={reload}
       />
     </AppShell>
   )

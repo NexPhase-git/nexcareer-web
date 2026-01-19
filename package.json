@@ -2,11 +2,15 @@
   "name": "nexcareer-web",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -33,9 +37,11 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "unpdf": "^1.4.0",
-    "zod": "^4.2.1"
+    "zod": "^4.2.1",
+    "@nexcareer/core": "*"
   },
   "devDependencies": {
+    "turbo": "^2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { GraduationCap, Brain, Code, Building2, Loader2, Check } from 'lucide-react'
 import { AppShell } from '@/components/layout/app-shell'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
-import type { Application, InterviewType } from '@/types/database'
+import { useCurrentUser, useApplications, useCoach } from '@/hooks'
+import { type InterviewType } from '@nexcareer/core'
 
 interface InterviewTypeOption {
   type: InterviewType
@@ -38,138 +36,35 @@ const interviewTypes: InterviewTypeOption[] = [
 ]
 
 export default function CoachPage() {
-  const router = useRouter()
-  const [applications, setApplications] = useState<Application[]>([])
-  const [isLoadingApps, setIsLoadingApps] = useState(true)
-  const [selectedType, setSelectedType] = useState<InterviewType | null>(null)
-  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [questions, setQuestions] = useState<string[]>([])
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [answer, setAnswer] = useState('')
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const [isGettingFeedback, setIsGettingFeedback] = useState(false)
-  const [practiceStarted, setPracticeStarted] = useState(false)
+  const { user } = useCurrentUser({ redirectTo: '/login' })
+  const { applications, isLoading: isLoadingApps } = useApplications({
+    userId: user?.id ?? null,
+  })
 
-  const loadApplications = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (data) {
-      setApplications(data as Application[])
-    }
-
-    setIsLoadingApps(false)
-  }
-
-  useEffect(() => {
-    loadApplications()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const startPractice = async () => {
-    if (!selectedType) return
-
-    if (selectedType === 'companySpecific' && !selectedApplication) {
-      return
-    }
-
-    setIsGenerating(true)
-
-    try {
-      const response = await fetch('/api/interview', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: selectedType,
-          company: selectedApplication?.company,
-          position: selectedApplication?.position,
-          questionCount: 5,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        console.error('Failed to generate questions:', data.error)
-        return
-      }
-
-      setQuestions(data.questions)
-      setPracticeStarted(true)
-    } catch (error) {
-      console.error('Failed to generate questions:', error)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-
-  const submitAnswer = async () => {
-    if (!answer.trim()) return
-
-    setIsGettingFeedback(true)
-
-    try {
-      const response = await fetch('/api/interview/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: questions[currentQuestionIndex],
-          answer: answer,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.error) {
-        console.error('Failed to get feedback:', data.error)
-        setFeedback('Sorry, I could not generate feedback. Please try again.')
-        return
-      }
-
-      setFeedback(data.feedback)
-    } catch (error) {
-      console.error('Failed to get feedback:', error)
-      setFeedback('Sorry, I could not generate feedback. Please try again.')
-    } finally {
-      setIsGettingFeedback(false)
-    }
-  }
-
-  const nextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1)
-      setAnswer('')
-      setFeedback(null)
-    }
-  }
-
-  const resetPractice = () => {
-    setPracticeStarted(false)
-    setQuestions([])
-    setCurrentQuestionIndex(0)
-    setAnswer('')
-    setFeedback(null)
-    setSelectedType(null)
-    setSelectedApplication(null)
-  }
+  const {
+    selectedType,
+    setSelectedType,
+    selectedApplication,
+    setSelectedApplication,
+    isGenerating,
+    questions,
+    currentQuestionIndex,
+    answer,
+    setAnswer,
+    feedback,
+    isGettingFeedback,
+    practiceStarted,
+    progress,
+    isLastQuestion,
+    canStartPractice,
+    startPractice,
+    submitAnswer,
+    nextQuestion,
+    resetPractice,
+  } = useCoach({ applications })
 
   // Practice mode
   if (practiceStarted && questions.length > 0) {
-    const isLastQuestion = currentQuestionIndex === questions.length - 1
-    const progress = ((currentQuestionIndex + 1) / questions.length) * 100
-
     return (
       <AppShell title="Interview Practice">
         <div className="p-4 lg:p-6 pb-24 lg:pb-6">
@@ -292,9 +187,6 @@ export default function CoachPage() {
                   onClick={() => {
                     if (!isDisabled) {
                       setSelectedType(option.type)
-                      if (option.type !== 'companySpecific') {
-                        setSelectedApplication(null)
-                      }
                     }
                   }}
                   disabled={isDisabled}
@@ -361,11 +253,7 @@ export default function CoachPage() {
           {/* Start Button */}
           <Button
             onClick={startPractice}
-            disabled={
-              !selectedType ||
-              isGenerating ||
-              (selectedType === 'companySpecific' && !selectedApplication)
-            }
+            disabled={!canStartPractice}
             className="w-full h-12 bg-bright-green hover:bg-[#8AD960] text-forest-green"
           >
             {isGenerating ? (

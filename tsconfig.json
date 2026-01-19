@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nexcareer/core": ["./packages/core/src/index.ts"],
+      "@nexcareer/core/*": ["./packages/core/src/*"]
     }
   },
   "include": [

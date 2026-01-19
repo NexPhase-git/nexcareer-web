@@ -25,16 +25,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import type { Application, ApplicationStatus } from '@/types/database'
-
-const statusOptions: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
+import { useCurrentUser, useApplication, useApplications } from '@/hooks'
+import { APPLICATION_STATUSES, type ApplicationStatus } from '@nexcareer/core'
 
 export default function EditApplicationPage() {
   const router = useRouter()
   const params = useParams()
   const applicationId = params.id as string
+
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { application, isLoading: isLoadingApp } = useApplication(applicationId, user?.id ?? null)
+  const { updateApplication, deleteApplication } = useApplications({
+    userId: user?.id ?? null,
+    autoLoad: false,
+  })
 
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
@@ -43,43 +48,30 @@ export default function EditApplicationPage() {
   const [interviewDate, setInterviewDate] = useState('')
   const [url, setUrl] = useState('')
   const [notes, setNotes] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
+  // Populate form when application is loaded
   useEffect(() => {
-    let isMounted = true
-    const loadApplication = async () => {
-      const supabase = createClient()
-
-      const { data, error } = await supabase
-        .from('applications')
-        .select('*')
-        .eq('id', applicationId)
-        .single()
-
-      if (!isMounted) return
-
-      if (error || !data) {
-        toast.error('Application not found')
-        router.push('/tracker')
-        return
-      }
-
-      const app = data as Application
-      setCompany(app.company)
-      setPosition(app.position)
-      setStatus(app.status)
-      setAppliedDate(app.applied_date || '')
-      setInterviewDate(app.interview_date || '')
-      setUrl(app.url || '')
-      setNotes(app.notes || '')
-      setIsLoading(false)
+    if (application) {
+      setCompany(application.company)
+      setPosition(application.position)
+      setStatus(application.status)
+      setAppliedDate(application.appliedDate?.toISOString().split('T')[0] || '')
+      setInterviewDate(application.interviewDate?.toISOString().split('T')[0] || '')
+      setUrl(application.url || '')
+      setNotes(application.notes || '')
     }
-    loadApplication()
-    return () => { isMounted = false }
-  }, [applicationId, router])
+  }, [application])
+
+  // Handle application not found
+  useEffect(() => {
+    if (!isLoadingUser && !isLoadingApp && !application && user) {
+      toast.error('Application not found')
+      router.push('/tracker')
+    }
+  }, [isLoadingUser, isLoadingApp, application, user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,53 +88,40 @@ export default function EditApplicationPage() {
 
     setIsSaving(true)
 
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('applications')
-      .update({
+    try {
+      await updateApplication(applicationId, {
         company: company.trim(),
         position: position.trim(),
         status,
-        applied_date: appliedDate || null,
-        interview_date: status === 'Interview' && interviewDate ? interviewDate : null,
-        url: url.trim() || null,
+        appliedDate: appliedDate ? new Date(appliedDate) : null,
         notes: notes.trim() || null,
-        updated_at: new Date().toISOString(),
+        url: url.trim() || null,
       })
-      .eq('id', applicationId)
 
-    setIsSaving(false)
-
-    if (error) {
-      toast.error(error.message)
-      return
+      toast.success('Application updated successfully!')
+      router.push('/tracker')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update application')
+    } finally {
+      setIsSaving(false)
     }
-
-    toast.success('Application updated successfully!')
-    router.push('/tracker')
   }
 
   const handleDelete = async () => {
     setIsDeleting(true)
 
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('applications')
-      .delete()
-      .eq('id', applicationId)
-
-    setIsDeleting(false)
-
-    if (error) {
-      toast.error(error.message)
-      return
+    try {
+      await deleteApplication(applicationId)
+      toast.success('Application deleted')
+      router.push('/tracker')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete application')
+    } finally {
+      setIsDeleting(false)
     }
-
-    toast.success('Application deleted')
-    router.push('/tracker')
   }
+
+  const isLoading = isLoadingUser || isLoadingApp
 
   if (isLoading) {
     return (
@@ -227,7 +206,7 @@ export default function EditApplicationPage() {
                     onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
                     className="w-full h-12 px-4 rounded-lg border border-border bg-background text-content-primary focus:border-forest-green focus:ring-1 focus:ring-forest-green"
                   >
-                    {statusOptions.map((s) => (
+                    {APPLICATION_STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>

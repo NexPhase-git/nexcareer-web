@@ -18,15 +18,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import type { UserProfile, Education, Experience } from '@/types/database'
+import { useCurrentUser, useProfile } from '@/hooks'
+import { type Education, type Experience } from '@nexcareer/core'
 
 export default function EditProfilePage() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { profile, isLoading: isLoadingProfile, updateProfile } = useProfile({
+    userId: user?.id ?? null,
+  })
 
+  const [isSaving, setIsSaving] = useState(false)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -36,23 +39,9 @@ export default function EditProfilePage() {
   const [education, setEducation] = useState<Education[]>([])
   const [experience, setExperience] = useState<Experience[]>([])
 
-  const loadProfile = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (data) {
-      const profile = data as UserProfile
+  // Populate form when profile is loaded
+  useEffect(() => {
+    if (profile) {
       setName(profile.name || '')
       setEmail(profile.email || '')
       setPhone(profile.phone || '')
@@ -61,30 +50,13 @@ export default function EditProfilePage() {
       setEducation(profile.education || [])
       setExperience(profile.experience || [])
     }
-
-    setIsLoading(false)
-  }
-
-  useEffect(() => {
-    loadProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [profile])
 
   const handleSave = async () => {
     setIsSaving(true)
 
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      toast.error('Please log in to save profile')
-      return
-    }
-
-    const { error } = await supabase
-      .from('profiles')
-      .upsert({
-        user_id: user.id,
+    try {
+      await updateProfile({
         name: name.trim() || null,
         email: email.trim() || null,
         phone: phone.trim() || null,
@@ -92,18 +64,15 @@ export default function EditProfilePage() {
         skills,
         education,
         experience,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' })
+      })
 
-    setIsSaving(false)
-
-    if (error) {
-      toast.error(error.message)
-      return
+      toast.success('Profile saved successfully!')
+      router.push('/profile')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save profile')
+    } finally {
+      setIsSaving(false)
     }
-
-    toast.success('Profile saved successfully!')
-    router.push('/profile')
   }
 
   const addSkill = () => {
@@ -121,7 +90,7 @@ export default function EditProfilePage() {
     setEducation([...education, { school: '', degree: '', year: null }])
   }
 
-  const updateEducation = (index: number, field: keyof Education, value: string) => {
+  const updateEducationItem = (index: number, field: keyof Education, value: string) => {
     const updated = [...education]
     updated[index] = { ...updated[index], [field]: value || null }
     setEducation(updated)
@@ -135,7 +104,7 @@ export default function EditProfilePage() {
     setExperience([...experience, { company: '', role: '', duration: null, description: null }])
   }
 
-  const updateExperience = (index: number, field: keyof Experience, value: string) => {
+  const updateExperienceItem = (index: number, field: keyof Experience, value: string) => {
     const updated = [...experience]
     updated[index] = { ...updated[index], [field]: value || null }
     setExperience(updated)
@@ -144,6 +113,8 @@ export default function EditProfilePage() {
   const removeExperience = (index: number) => {
     setExperience(experience.filter((_, i) => i !== index))
   }
+
+  const isLoading = isLoadingUser || isLoadingProfile
 
   if (isLoading) {
     return (
@@ -301,22 +272,22 @@ export default function EditProfilePage() {
                     </div>
                     <Input
                       value={exp.company || ''}
-                      onChange={(e) => updateExperience(index, 'company', e.target.value)}
+                      onChange={(e) => updateExperienceItem(index, 'company', e.target.value)}
                       placeholder="Company name"
                     />
                     <Input
                       value={exp.role || ''}
-                      onChange={(e) => updateExperience(index, 'role', e.target.value)}
+                      onChange={(e) => updateExperienceItem(index, 'role', e.target.value)}
                       placeholder="Job title"
                     />
                     <Input
                       value={exp.duration || ''}
-                      onChange={(e) => updateExperience(index, 'duration', e.target.value)}
+                      onChange={(e) => updateExperienceItem(index, 'duration', e.target.value)}
                       placeholder="Duration (e.g., Jan 2020 - Present)"
                     />
                     <textarea
                       value={exp.description || ''}
-                      onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                      onChange={(e) => updateExperienceItem(index, 'description', e.target.value)}
                       placeholder="Brief description of responsibilities"
                       rows={2}
                       className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm resize-none"
@@ -362,17 +333,17 @@ export default function EditProfilePage() {
                     </div>
                     <Input
                       value={edu.school || ''}
-                      onChange={(e) => updateEducation(index, 'school', e.target.value)}
+                      onChange={(e) => updateEducationItem(index, 'school', e.target.value)}
                       placeholder="School name"
                     />
                     <Input
                       value={edu.degree || ''}
-                      onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                      onChange={(e) => updateEducationItem(index, 'degree', e.target.value)}
                       placeholder="Degree"
                     />
                     <Input
                       value={edu.year || ''}
-                      onChange={(e) => updateEducation(index, 'year', e.target.value)}
+                      onChange={(e) => updateEducationItem(index, 'year', e.target.value)}
                       placeholder="Year (e.g., 2020)"
                     />
                   </div>
