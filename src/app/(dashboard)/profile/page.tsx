@@ -1,7 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
   Upload,
@@ -19,40 +17,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ResumeUpload } from '@/components/resume-upload'
-import { createClient } from '@/lib/supabase/client'
-import type { UserProfile } from '@/types/database'
+import { useCurrentUser, useProfile } from '@/hooks'
 
 export default function ProfilePage() {
-  const router = useRouter()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { profile, isLoading: isLoadingProfile, reload } = useProfile({
+    userId: user?.id ?? null,
+  })
 
-  const loadProfile = async () => {
-    const supabase = createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (data) {
-      setProfile(data as UserProfile)
-    }
-
-    setIsLoading(false)
-  }
-
-  useEffect(() => {
-    loadProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const isLoading = isLoadingUser || isLoadingProfile
 
   if (isLoading) {
     return (
@@ -78,7 +51,7 @@ export default function ProfilePage() {
           <p className="text-content-secondary mb-6 max-w-sm">
             Upload your resume to automatically create your profile with AI
           </p>
-          <ResumeUpload onSuccess={loadProfile} />
+          <ResumeUpload onSuccess={reload} />
         </div>
       </AppShell>
     )
@@ -121,7 +94,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
                   <ResumeUpload
-                    onSuccess={loadProfile}
+                    onSuccess={reload}
                     className="text-content-secondary hover:text-content-primary"
                   />
                   <Link href="/profile/edit">

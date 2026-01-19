@@ -1,4 +1,30 @@
-export interface UserProfile {
+/**
+ * Database row types for direct Supabase operations
+ * These use snake_case to match the database schema
+ *
+ * For domain types, use @nexcareer/core instead
+ */
+
+export type { ApplicationStatus } from '@nexcareer/core'
+
+// Database row type (snake_case) for direct Supabase queries
+export interface ApplicationRow {
+  id?: string
+  user_id: string
+  company: string
+  position: string
+  status: 'Saved' | 'Applied' | 'Interview' | 'Offer' | 'Rejected'
+  applied_date: string | null
+  notes: string | null
+  url: string | null
+  followed_up_at?: string | null
+  interview_date?: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+// Profile database row type (snake_case)
+export interface ProfileRow {
   id: string
   user_id: string
   name: string | null
@@ -26,45 +52,6 @@ export interface Experience {
   description: string | null
 }
 
-// Match Flutter schema exactly
-export type ApplicationStatus = 'Saved' | 'Applied' | 'Interview' | 'Offer' | 'Rejected'
-
-export const APPLICATION_STATUSES: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
-
-export interface Application {
-  id?: string
-  user_id: string
-  company: string
-  position: string  // Flutter uses 'position', not 'role'
-  status: ApplicationStatus
-  applied_date: string | null  // Flutter uses 'applied_date'
-  notes: string | null
-  url: string | null  // Flutter uses 'url', not 'job_link'
-  followed_up_at?: string | null  // For follow-up tracking
-  interview_date?: string | null  // For upcoming interview reminders
-  created_at?: string
-  updated_at?: string
-}
-
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
-  timestamp: Date
-}
-
-export type InterviewType = 'behavioral' | 'technical' | 'companySpecific'
-
-export interface InterviewSession {
-  id: string
-  user_id: string
-  application_id: string | null
-  type: InterviewType
-  questions: InterviewQuestion[]
-  created_at: string
-}
-
-export interface InterviewQuestion {
-  question: string
-  answer: string | null
-  feedback: string | null
-}
+// Legacy alias for backward compatibility
+export type Application = ApplicationRow
+export type UserProfile = ProfileRow

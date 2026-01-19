@@ -16,14 +16,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import type { ApplicationStatus } from '@/types/database'
-
-const statusOptions: ApplicationStatus[] = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
+import { useCurrentUser, useApplications } from '@/hooks'
+import { APPLICATION_STATUSES, type ApplicationStatus } from '@nexcareer/core'
 
 export default function AddApplicationPage() {
   const router = useRouter()
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { createApplication } = useApplications({ userId: user?.id ?? null, autoLoad: false })
+
   const [company, setCompany] = useState('')
   const [position, setPosition] = useState('')
   const [status, setStatus] = useState<ApplicationStatus>('Applied')
@@ -46,39 +47,41 @@ export default function AddApplicationPage() {
       return
     }
 
-    setIsSaving(true)
-
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-
     if (!user) {
       toast.error('Please log in to add applications')
       router.push('/login')
       return
     }
 
-    const { error } = await supabase
-      .from('applications')
-      .insert({
-        user_id: user.id,
+    setIsSaving(true)
+
+    try {
+      await createApplication({
         company: company.trim(),
         position: position.trim(),
         status,
-        applied_date: appliedDate || null,
-        interview_date: status === 'Interview' && interviewDate ? interviewDate : null,
-        url: url.trim() || null,
+        appliedDate: appliedDate ? new Date(appliedDate) : null,
         notes: notes.trim() || null,
+        url: url.trim() || null,
       })
 
-    setIsSaving(false)
-
-    if (error) {
-      toast.error(error.message)
-      return
+      toast.success('Application added successfully!')
+      router.push('/tracker')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to add application')
+    } finally {
+      setIsSaving(false)
     }
+  }
 
-    toast.success('Application added successfully!')
-    router.push('/tracker')
+  if (isLoadingUser) {
+    return (
+      <AppShell title="Add Application">
+        <div className="flex items-center justify-center h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-accent-green" />
+        </div>
+      </AppShell>
+    )
   }
 
   return (
@@ -142,7 +145,7 @@ export default function AddApplicationPage() {
                     onChange={(e) => setStatus(e.target.value as ApplicationStatus)}
                     className="w-full h-12 px-4 rounded-lg border border-border bg-background text-content-primary focus:border-forest-green focus:ring-1 focus:ring-forest-green"
                   >
-                    {statusOptions.map((s) => (
+                    {APPLICATION_STATUSES.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>

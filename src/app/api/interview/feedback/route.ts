@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { getServerCore } from '@/lib/core/server'
 import { isRateLimited, getClientIP, sanitizeString } from '@/lib/security'
-
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
-const MODEL = 'llama-3.1-8b-instant'
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,36 +34,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Input too long' }, { status: 400 })
     }
 
-    const systemPrompt = `You are an interview coach providing feedback on interview answers. Analyze the answer and provide:
-1. What was done well
-2. Areas for improvement
-3. A suggested better answer structure
+    // Use clean architecture AI service
+    const core = await getServerCore()
+    const result = await core.services.ai.generateFeedback(question, answer)
 
-Keep feedback concise (under 200 words) and constructive.`
-
-    const response = await fetch(GROQ_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Question: ${question}\n\nAnswer: ${answer}` },
-        ],
-        temperature: 0.7,
-        max_tokens: 512,
-      }),
-    })
-
-    if (!response.ok) {
-      return NextResponse.json({ error: `API error: ${response.status}` }, { status: response.status })
+    if (result.error || !result.data) {
+      return NextResponse.json(
+        { error: result.error ?? 'Failed to generate feedback' },
+        { status: 500 }
+      )
     }
 
-    const data = await response.json()
-    return NextResponse.json({ feedback: data.choices[0].message.content })
+    return NextResponse.json({ feedback: result.data })
   } catch (error) {
     console.error('Feedback API error:', error)
     return NextResponse.json({ error: 'Failed to generate feedback' }, { status: 500 })

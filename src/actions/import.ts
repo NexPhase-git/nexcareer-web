@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import type { ApplicationStatus } from '@/types/database'
+import type { ApplicationStatus } from '@nexcareer/core'
 
 export interface ImportRow {
   company: string

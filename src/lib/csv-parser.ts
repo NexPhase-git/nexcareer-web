@@ -1,5 +1,5 @@
 import Papa from 'papaparse'
-import type { ApplicationStatus } from '@/types/database'
+import type { ApplicationStatus } from '@nexcareer/core'
 
 export interface ParsedCSVRow {
   company: string

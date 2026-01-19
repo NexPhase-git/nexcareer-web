@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
   FileText,
@@ -23,8 +22,13 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ResumeUpload } from '@/components/resume-upload'
 import { ImportModal } from '@/components/import/import-modal'
-import { createClient } from '@/lib/supabase/client'
-import type { UserProfile, Application, ApplicationStatus } from '@/types/database'
+import {
+  useCurrentUser,
+  useApplications,
+  useApplicationStats,
+  useProfile,
+} from '@/hooks'
+import { type ApplicationStatus } from '@nexcareer/core'
 
 interface StatCardProps {
   icon: React.ReactNode
@@ -86,95 +90,40 @@ const statusColors: Record<ApplicationStatus, string> = {
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [applications, setApplications] = useState<Application[]>([])
-  const [statusCounts, setStatusCounts] = useState<Record<ApplicationStatus, number>>({
-    Saved: 0,
-    Applied: 0,
-    Interview: 0,
-    Offer: 0,
-    Rejected: 0,
+  const { user, isLoading: isLoadingUser } = useCurrentUser({ redirectTo: '/login' })
+  const { profile, isLoading: isLoadingProfile, reload: reloadProfile } = useProfile({
+    userId: user?.id ?? null,
   })
-  const [isLoading, setIsLoading] = useState(true)
+  const { applications, isLoading: isLoadingApps, reload: reloadApps } = useApplications({
+    userId: user?.id ?? null,
+  })
+  const { stats, isLoading: isLoadingStats } = useApplicationStats(user?.id ?? null)
+
   const [showImportModal, setShowImportModal] = useState(false)
 
-  const loadData = async () => {
-    const supabase = createClient()
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    // Load profile
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (profileData) {
-      setProfile(profileData as UserProfile)
-    }
-
-    // Load applications - parallel queries for efficiency
-    const [recentAppsResult, allStatusesResult] = await Promise.all([
-      // Query 1: Recent 5 applications for display
-      supabase
-        .from('applications')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5),
-      // Query 2: All statuses for accurate counts (minimal data)
-      supabase
-        .from('applications')
-        .select('status')
-        .eq('user_id', user.id),
-    ])
-
-    if (recentAppsResult.data) {
-      setApplications(recentAppsResult.data as Application[])
-    }
-
-    if (allStatusesResult.data) {
-      // Calculate status counts from all applications
-      const counts: Record<ApplicationStatus, number> = {
-        Saved: 0,
-        Applied: 0,
-        Interview: 0,
-        Offer: 0,
-        Rejected: 0,
-      }
-
-      allStatusesResult.data.forEach((app) => {
-        counts[app.status as ApplicationStatus]++
-      })
-
-      setStatusCounts(counts)
-    }
-
-    setIsLoading(false)
+  const handleReload = async () => {
+    await Promise.all([reloadProfile(), reloadApps()])
   }
-
-  useEffect(() => {
-    let isMounted = true
-    const fetchData = async () => {
-      await loadData()
-      if (!isMounted) return
-    }
-    fetchData()
-    return () => { isMounted = false }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const getGreeting = () => {
     const hour = new Date().getHours()
     if (hour < 12) return 'Good morning'
     if (hour < 17) return 'Good afternoon'
     return 'Good evening'
+  }
+
+  const isLoading = isLoadingUser || isLoadingProfile || isLoadingApps || isLoadingStats
+
+  // Get recent 5 applications
+  const recentApplications = applications.slice(0, 5)
+
+  // Get status counts from stats
+  const statusCounts = stats?.byStatus ?? {
+    Saved: 0,
+    Applied: 0,
+    Interview: 0,
+    Offer: 0,
+    Rejected: 0,
   }
 
   if (isLoading) {
@@ -188,7 +137,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <AppShell title="Dashboard" userName={profile?.name}>
+    <AppShell title="Dashboard" userName={profile?.name ?? undefined}>
       <div className="p-4 lg:p-6 space-y-6 pb-24 lg:pb-6">
         {/* Greeting */}
         <h2 className="text-2xl font-bold text-content-primary">
@@ -243,7 +192,7 @@ export default function DashboardPage() {
                 <p className="text-sm text-content-secondary mb-4">
                   Upload your resume to create your profile automatically with AI
                 </p>
-                <ResumeUpload onSuccess={loadData} />
+                <ResumeUpload onSuccess={handleReload} />
               </CardContent>
             </Card>
           ) : (
@@ -278,7 +227,7 @@ export default function DashboardPage() {
                 href="/tracker/add"
               />
               <ResumeUpload
-                onSuccess={loadData}
+                onSuccess={handleReload}
                 className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-muted transition-colors cursor-pointer min-w-[100px]"
               />
               <QuickAction
@@ -318,7 +267,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
 
-              {applications.length === 0 ? (
+              {recentApplications.length === 0 ? (
                 <div className="py-8 text-center">
                   <Briefcase className="w-12 h-12 mx-auto text-content-tertiary mb-3" />
                   <p className="text-content-secondary mb-4">No applications yet</p>
@@ -331,7 +280,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {applications.map((app) => (
+                  {recentApplications.map((app) => (
                     <Link
                       key={app.id}
                       href={`/tracker/${app.id}`}
@@ -369,7 +318,7 @@ export default function DashboardPage() {
                   </Link>
                 </div>
 
-                {applications.length === 0 ? (
+                {recentApplications.length === 0 ? (
                   <div className="py-12 text-center">
                     <Briefcase className="w-12 h-12 mx-auto text-content-tertiary mb-3" />
                     <p className="text-content-secondary mb-4">No applications yet</p>
@@ -382,7 +331,7 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {applications.map((app) => (
+                    {recentApplications.map((app) => (
                       <Link
                         key={app.id}
                         href={`/tracker/${app.id}`}
@@ -418,7 +367,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-content-secondary mb-4">
                     Upload your resume to create your profile automatically with AI
                   </p>
-                  <ResumeUpload onSuccess={loadData} />
+                  <ResumeUpload onSuccess={handleReload} />
                 </CardContent>
               </Card>
             ) : (
@@ -455,7 +404,7 @@ export default function DashboardPage() {
                 </Link>
                 <ResumeUpload
                   variant="quickAction"
-                  onSuccess={loadData}
+                  onSuccess={handleReload}
                   className="flex items-center gap-3 p-3 rounded-lg bg-bright-green hover:bg-[#8AD960] transition-colors w-full"
                 />
                 <Link
@@ -504,7 +453,7 @@ export default function DashboardPage() {
       <ImportModal
         open={showImportModal}
         onClose={() => setShowImportModal(false)}
-        onSuccess={loadData}
+        onSuccess={handleReload}
       />
     </AppShell>
   )
